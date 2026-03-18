@@ -15,7 +15,7 @@ You need pip
  5. download requirements from txt file:
           pip install -r requirements.txt
     
- 6. run the app
+ 6. run the app:
           python app.py
           
  7. open app in browser by searching for:
