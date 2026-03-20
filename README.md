@@ -9,8 +9,11 @@ You need pip
  2. Create virtual environment to run app.py:
           python -m venv env
     
- 4. activate the virtual environment:
+ 4. activate the virtual environment(windows):
           env\Scripts\activate
+
+    If using Linux, run this on the termial:
+        source env/bin/activate
     
  5. download requirements from txt file:
           pip install -r requirements.txt
