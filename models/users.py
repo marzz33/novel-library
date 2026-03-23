@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from app import db, bcrypt
 import uuid                                 # Generates new random ID for each user
@@ -14,6 +14,9 @@ class MemberStatus(Enum):
     ACTIVE = "Active"
     INACTIVE = "Suspended"
 
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
 # Abstract Base Class for Users
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -23,7 +26,7 @@ class User(UserMixin, db.Model):
     email           = db.Column(db.String(150), unique=True, nullable=False)
     password        = db.Column(db.String(260), nullable=False)
     phone           = db.Column(db.String(20), nullable=True)
-    added_on        = db.Column(db.DateTime, default=datetime.utcnow())
+    added_on        = db.Column(db.DateTime, default=utcnow)
     role            = db.Column(db.Enum(UserRole), nullable=False)
     status          = db.Column(db.Enum(MemberStatus), nullable=False)
 
