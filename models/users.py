@@ -30,6 +30,11 @@ class User(UserMixin, db.Model):
     role            = db.Column(db.Enum(UserRole), nullable=False)
     status          = db.Column(db.Enum(MemberStatus), nullable=False)
 
+    __mappper_args__ = {
+            'polymorphic_on':       role,
+            'polymorphic_identity': 'user'
+        }
+
     def __init__(self, user_id: str, name: str, email: str,
                  password_hash: str, phone: str):
         self._user_id       = str(uuid.uuid4())
@@ -37,4 +42,4 @@ class User(UserMixin, db.Model):
         self._email         = email
         self._password      = bcrypt.generate_password_hash(password_hash).decode("utf-8")
         self._phone         = phone
-        self._added_on      = datetime.now()
+        self._added_on      = utcnow()
