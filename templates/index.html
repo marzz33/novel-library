@@ -88,7 +88,7 @@
             width: 100%;
         }
 
-        /* login and signup buttons ! */
+        /* login and signup buttons ! ------------------- */
         .login-btn {
             cursor: pointer;
             border: none;
@@ -120,7 +120,7 @@
             background: transparent;
         }
 
-        /* navigation bar ! */
+        /* navigation bar ! ------------------- */
         header {
             background: #fff;
         }
@@ -138,6 +138,7 @@
             display: flex;
             gap: 10px;
             margin-left: -30px;
+            overflow: visible;
         }
     
         .navbar .nav-menu .nav-link {
@@ -153,11 +154,11 @@
             background: #96a090;
         }
 
-        /* search bar ! */
+        /* search bar ! ------------------- */
         .container {
             display: inline-block;
             width: 600px;
-            margin-top: 300px;
+            margin-top: 100px;
         }
 
         form {
@@ -168,6 +169,7 @@
             background: #fff;
             border-radius: var(--border-radius-m);
             overflow: hidden;
+            margin-top: 20px;
         }
 
         form button {
@@ -201,6 +203,65 @@
             color: var(--green);
         }
 
+        /* welcome img of container ! */
+        .welcome {
+            width: 450px;
+            height: auto;
+            margin-top: -60px;
+            display: inline-block;
+        }
+
+        /* dropdown menu for browse ! ------------------- */
+        ul li {
+            display: inline-block;
+            position: relative;
+        }
+
+        /* note: edits the link */
+        ul li a {
+            display: block;
+            padding: 20px 20px;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* note: makes all link bgs fit in the block */
+        ul li ul.dropdown li {
+            display: block;
+        }
+
+        /* note: puts the hidden dropdown menu below 'browse' in a green box */
+        ul li ul.dropdown {
+            width: fit-content;
+            position: absolute;
+            top: 100%;
+            place-self: center;
+            z-index: 999;
+            display: none;
+            box-sizing: border-box;
+            background: #96a090;
+            border-radius: var(--border-radius-m);
+            overflow: hidden;
+        }
+
+        /* note: this keeps the 'browse' text white with green bg */
+        .navbar .nav-menu li:hover > a {
+            background: #96a090;
+            color: white;
+        }
+
+        /* note: makes sure the dropdown bg color changes */
+        .navbar .nav-menu li a:hover {
+            background: #838b7d;
+        }
+
+        /* note: displays the dropdown menu */
+         ul li:hover ul.dropdown {
+            display: block;
+        }
+
         </style>
 
     </head>
@@ -214,15 +275,28 @@
 
                 <!--navigation buttons-->
                 <ul class = "nav-menu">
+
                     <li class = "nav-item">
-                        <a href = "#" class = "nav-link">Browse</a>
+                        <a href = "#" class = "nav-link"> Browse
+                            <i class="fa-solid fa-chevron-down"></i></a>
+                        <ul class = "dropdown">
+                            <li><a href = "#">Books</a></li>
+                            <li><a href = "#">Movies</a></li>
+                            <li><a href = "#">Computers</a></li>
+                        </ul>
                     </li>
+
                     <li class = "nav-item">
                         <a href = "#" class = "nav-link">Reservations</a>
+                        <ul class = "dropdown">
+                            <li><a href = "#">testingggg</a></li>
+                        </ul>
                     </li>
+
                     <li class = "nav-item">
                         <a href = "#" class = "nav-link">My Loans</a>
                     </li>
+
                     <li class = "nav-item">
                         <a href = "#" class = "nav-link">About Us</a>
                     </li>
@@ -236,13 +310,18 @@
             </nav>
         </header>
         
+        <!-- welcome pic with search bar -->
         <div class = "container">
+            <div class = "welcome">
+                <img src= "https://pbs.twimg.com/media/HEIhL-DaIAAz4Ax?format=jpg&name=large">
+            </div>
                     <form>
                         <i class = "fas fa-search"></i>
                         <input type = "text" placeholder = "What are you looking for?"></input>
                         <button type = "submit">Search</button>
                     </form>
                 </div>
+        
     </body>
 
     </html>
