@@ -19,7 +19,7 @@ class Condition(Enum):
 
 class Item(db.Model):
 
-    __tablename__ = "items"
+    __tablename__ = "Items"
 
     id                  = db.Column(db.Integer, primary_key=True)
     item_id             = db.Column(db.String(36), unique=True, nullable=False)
