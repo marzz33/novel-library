@@ -2,6 +2,7 @@ from app import db
 from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
+from models.Items import Item
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -35,9 +36,6 @@ class Transaction(db.Model):
     due_date             = db.Column(db.DateTime, nullable=True)
     returned_date        = db.Column(db.DateTime, nullable=True)
     status               = db.Column(db.Enum(TransactionStatus), nullable=False, default=TransactionStatus.ACTIVE)
-    
-    item = db.relationship("Item", backref="transactions")
-    user = db.relationship("User", backref="transactions")    
 
     def __init__(self, user_id: str, item_id: str, transaction_type: TransactionType, item_type: str):
         self._transaction_id      = str(uuid.uuid4())
@@ -48,9 +46,42 @@ class Transaction(db.Model):
         self.status               = TransactionStatus.ACTIVE
         self.date                 = utcnow()
 
+        # This allows a transaction to close itself if it is a return transaction,
+        # otherwise it will set the due date based on the item type
+        if transaction_type == TransactionType.RETURNED:
+            self.due_date = None
+            self.returned_date = utcnow()
+            self.status = TransactionStatus.COMPLETED
+        else:
+            self.status = TransactionStatus.ACTIVE
+            self.returned_date = None
+
+        # This sets the due date based on the item type,
+        # it will be used for both loan and renewed transactions
         if item_type == "book":
             self.due_date = self.date + timedelta(days=28)
         elif item_type == "movie":
             self.due_date = self.date + timedelta(days=7)
-        elif item_type == "computer":
+        else:
             self.due_date = self.date + timedelta(days=140)
+
+    # This method marks a transaction as completed when a return transaction is created,
+    # it will also update the returned date and increase the available quantity of the item in inventory
+    def Completed(self):
+        self.status = TransactionStatus.COMPLETED
+        self.returned_date = utcnow()
+        item = Item.query.filter_by(item_id=self.item_id).first()
+        if item:
+            item.available_qty += 1
+            db.session.commit()
+
+    # This method checks if a transaction is overdue, if it is it will update the status to overdue and return true, 
+    # otherwise it will return false
+    def Overdue(self):
+        if (self.status == TransactionStatus.ACTIVE and self.due_date is not None and self.due_date < utcnow()):
+            self.status = TransactionStatus.OVERDUE
+            db.session.commit()
+
+            # Fine trigger will go here once its created and implemented
+            return True
+        return False
