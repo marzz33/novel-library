@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
 from models.Items import Item
+from models.users import User
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -58,16 +59,16 @@ class Transaction(db.Model):
 
         # This sets the due date based on the item type,
         # it will be used for both loan and renewed transactions
-        if item_type == "book":
+        if item_type == "Book":
             self.due_date = self.date + timedelta(days=28)
-        elif item_type == "movie":
+        elif item_type == "Movie":
             self.due_date = self.date + timedelta(days=7)
         else:
             self.due_date = self.date + timedelta(days=140)
 
     # This method marks a transaction as completed when a return transaction is created,
     # it will also update the returned date and increase the available quantity of the item in inventory
-    def Completed(self):
+    def completed(self):
         self.status = TransactionStatus.COMPLETED
         self.returned_date = utcnow()
         item = Item.query.filter_by(item_id=self.item_id).first()
@@ -77,11 +78,66 @@ class Transaction(db.Model):
 
     # This method checks if a transaction is overdue, if it is it will update the status to overdue and return true, 
     # otherwise it will return false
-    def Overdue(self):
+    def overdue(self):
         if (self.status == TransactionStatus.ACTIVE and self.due_date is not None and self.due_date < utcnow()):
             self.status = TransactionStatus.OVERDUE
             db.session.commit()
 
-            # Fine trigger will go here once its created and implemented
+            # Fine & Notification triggers will go here once they are created and implemented
             return True
         return False
+    
+    # Calculates how much a user owes in fines for an overdue transaction,
+    # it will return 0 if the transaction is not overdue or if the due date is not set
+    def calculate_fine(self):
+        if self.status != TransactionStatus.OVERDUE or self.due_date is None:
+            return 0.0
+        
+        overdue_days = (utcnow() - self.due_date).days
+        if self.item_type == "Computer":
+            fine_rate = 10.0
+        else:
+            fine_rate = 1.0
+        return fine_rate * overdue_days
+
+    def get_summary(self):
+        item = Item.query.filter_by(item_id=self.item_id).first()
+        return {
+            "transaction_id": self.transaction_id,
+            "user_id": self.user_id,
+            "item_id": self.item_id,
+            "title": item.title if item else None,
+            "transaction_type": self.transaction_type.value,
+            "item_type": self.item_type,
+            "date": self.date.isoformat(),
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "returned_date": self.returned_date.isoformat() if self.returned_date else None,
+            "status": self.status.value,
+            "overdue": self.status == TransactionStatus.OVERDUE,
+            "late_fee": self.calculate_fine()
+        }
+    def get_full_details(self):
+        user = User.query.filter_by(user_id=self.user_id).first()
+        item = Item.query.filter_by(item_id=self.item_id).first()
+        return {
+            "transaction_id": self.transaction_id,
+            "user": {
+                "user_id": self.user_id,
+                "name": user.name if user else None,
+                "email": user.email if user else None
+            },
+            "item": {
+                "item_id": self.item_id,
+                "title": item.title if item else None,
+                "description": item.description if item else None,
+                "item_type": item.item_type if item else None
+            },
+            "transaction_type": self.transaction_type.value,
+            "item_type": self.item_type,
+            "date": self.date.isoformat(),
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "returned_date": self.returned_date.isoformat() if self.returned_date else None,
+            "status": self.status.value,
+            "overdue": self.status == TransactionStatus.OVERDUE,
+            "late_fee": self.calculate_fine()
+        }
