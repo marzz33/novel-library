@@ -25,5 +25,10 @@ class Book(db.Model):
 def index():
     return render_template('index.html')
 
+@app.route('/books')
+def books():
+    all_books = Book.query.all()
+    return render_template('books.html', books=all_books)
+
 if __name__ == '__main__':
     app.run(debug=True)
