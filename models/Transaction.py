@@ -38,6 +38,12 @@ class Transaction(db.Model):
     returned_date        = db.Column(db.DateTime, nullable=True)
     status               = db.Column(db.Enum(TransactionStatus), nullable=False, default=TransactionStatus.ACTIVE)
 
+    # Added these relationships to allow for easier access to user and item details when viewing transactions,
+    # it will also allow for easier querying of transactions by user or item in the future if needed
+    # Solves the issue with get_summary due to pylance alert due to no relationship found
+    user                 = db.relationship("User", backref="transactions")
+    item                 = db.relationship("Item", backref="transactions")
+
     def __init__(self, user_id: str, item_id: str, transaction_type: TransactionType, item_type: str):
         self._transaction_id      = str(uuid.uuid4())
         self._user_id             = user_id
@@ -117,20 +123,18 @@ class Transaction(db.Model):
             "late_fee": self.calculate_fine()
         }
     def get_full_details(self):
-        user = User.query.filter_by(user_id=self.user_id).first()
-        item = Item.query.filter_by(item_id=self.item_id).first()
         return {
             "transaction_id": self.transaction_id,
             "user": {
                 "user_id": self.user_id,
-                "name": user.name if user else None,
-                "email": user.email if user else None
+                "name": self.user.name if self.user else None,
+                "email": self.user.email if self.user else None
             },
             "item": {
                 "item_id": self.item_id,
-                "title": item.title if item else None,
-                "description": item.description if item else None,
-                "item_type": item.item_type if item else None
+                "title": self.item.title if self.item else None,
+                "description": self.item.description if self.item else None,
+                "item_type": self.item.item_type if self.item else None
             },
             "transaction_type": self.transaction_type.value,
             "item_type": self.item_type,
