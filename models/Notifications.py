@@ -27,8 +27,6 @@ class Notification(db.Model):
     sent_on              = db.Column(db.DateTime, default=utcnow)
     is_read              = db.Column(db.Boolean, default=False)
 
-    user                 = db.relationship("User", backref="notifications")
-
     def __init__(self, user_id: str, notification_type: NotificationType, message: str):
         self._notification_id   = str(uuid.uuid4())
         self._user_id           = user_id
@@ -36,4 +34,31 @@ class Notification(db.Model):
         self._message           = message
         self._sent_on           = utcnow()
         self.is_read            = False
+
+    # Allows the system to send a notification to a user, it will add the
+    # notification to the database and commit the changes
+    def send(self):
+        db.session.add(self)
+        db.session.commit()
+    
+    # Allows users to mark notifications as read
+        self.is_read = True
+        db.session.commit()
+
+    # Allows users to delete notifications
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    # Allows users to view their notifications with basic details
+    def notif_dict(self):
+        return {
+            "notification_id": self.notification_id,
+            "user_id": self.user_id,
+            "notification_type": self.notification_type.value,
+            "message": self.message,
+            "sent_on": self.sent_on.isoformat(),
+            "is_read": self.is_read
+        }
+
     
