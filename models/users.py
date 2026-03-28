@@ -30,7 +30,7 @@ class User(UserMixin, db.Model):
     role            = db.Column(db.Enum(UserRole), nullable=False)
     status          = db.Column(db.Enum(MemberStatus), nullable=False)
 
-    __mappper_args__ = {
+    __mapper_args__ = {
             'polymorphic_on':       role,
             'polymorphic_identity': 'user'
         }
