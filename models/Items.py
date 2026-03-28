@@ -36,14 +36,13 @@ class Item(db.Model):
     }
 
     def __init__(self, title: str, description: str, qty: int, item_type: str):
-        
-        self._item_id       = str(uuid.uuid4())
-        self._title         = title
-        self._description   = description
-        self._qty           = qty
-        self._available_qty = qty
-        self.added_on       = utcnow()
-        self._item_type     = item_type
+        self.item_id       = str(uuid.uuid4())
+        self.title         = title
+        self.description   = description
+        self.qty           = qty
+        self.available_qty = qty
+        self.added_on      = utcnow()
+        self.item_type     = item_type
 
     def check_availability(self):
         return self.available_qty > 0

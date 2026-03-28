@@ -15,5 +15,12 @@ class Book(Item):
         'polymorphic_identity': 'book'
     }
 
+    def __init__(self, title, author, description, qty, isbn=None, genre=None, edition=None):
+        super().__init__(title=title, description=description, qty=qty, item_type='book')
+        self.author  = author
+        self.isbn    = isbn
+        self.genre   = genre
+        self.edition = edition
+
     def __repr__(self):
         return f'<Book {self.title}>'
