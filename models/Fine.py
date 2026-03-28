@@ -8,3 +8,98 @@ from models.users import User
 def utcnow():
     return datetime.now(timezone.utc)
 
+class FineStatus(Enum):
+    PAID = "Paid"
+    UNPAID = "Unpaid"
+    WAIVED = "Waived"
+
+class Fine(db.Model):
+
+    __tablename__ = "Fines"
+
+    id                   = db.Column(db.Integer, primary_key=True)
+    fine_id              = db.Column(db.String(45), unique=True, nullable=False)
+    transaction_id       = db.Column(db.String(45), db.ForeignKey("Transactions.transaction_id"), nullable=False)
+    user_id              = db.Column(db.String(45), db.ForeignKey("Users.user_id"), nullable=False)
+    amount               = db.Column(db.Float, nullable=False)
+    issued_on            = db.Column(db.DateTime, default=utcnow)
+    status               = db.Column(db.Enum(FineStatus), nullable=False, default=FineStatus.UNPAID)
+    resolved_on          = db.Column(db.DateTime, nullable=True)
+    reason               = db.Column(db.String(320), nullable=False)
+
+    # Added these relationships to allow for easier access to user and transaction details when viewing fines,
+    # it will also allow for easier querying of fines by user or transaction in the future if needed
+    user                 = db.relationship("User", backref="fines")
+    transaction          = db.relationship("Transaction", backref="fines")
+
+    def __init__(self, user_id: str, transaction_id: str, amount: float, reason: str):
+        self._fine_id         = str(uuid.uuid4())
+        self._transaction_id  = transaction_id
+        self._user_id         = user_id
+        self._amount          = amount
+        self._issued_on        = utcnow()
+        self._status           = FineStatus.UNPAID
+        self._resolved_on      = None
+        self._reason           = reason
+
+    # Member uses this function to pay their fine, it will also check if the fine has
+    # already been paid or waived before allowing the user to pay
+    def paid(self):
+        if self.status == FineStatus.WAIVED:
+            raise ValueError("Fine has already been waived.")
+        elif self.status == FineStatus.PAID:
+            raise ValueError("Fine has already been paid.")
+        else:
+            self.status = FineStatus.PAID
+            db.session.commit()
+
+    # Admin uses this function to waive a fine, it will also check if the fine has already been paid
+    # or waived before allowing the admin to waive the fine
+    def waive(self):
+        if self.status == FineStatus.PAID:
+            raise ValueError("Fine has already been paid and cannot be waived.")
+        elif self.status == FineStatus.WAIVED:
+            raise ValueError("Fine has already been waived.")
+        else:
+            self.status = FineStatus.WAIVED
+            db.session.commit()
+
+    def get_status(self):
+        return self.status
+    
+    def unpaid_fines(self):
+        return self.status == FineStatus.UNPAID
+    
+    # Allows members to view their fines with basic details, it will also allow admins to
+    # view fines with basic details when viewing a user's profile
+    def member_dict(self):
+        return {
+            "fine_id": self.fine_id,
+            "transaction_id": self.transaction_id,
+            "user_id": self.user_id,
+            "amount": self.amount,
+            "issued_on": self.issued_on.isoformat(),
+            "reason": self.reason,
+            "status": self.status.value,
+            "resolved_on": self.resolved_on.isoformat() if self.resolved_on else None
+        }
+    
+    # Allows admins to view fines with full details when viewing a transaction or when viewing
+    # all fines in the system, it will include user and item details for the transaction associated with the fine
+    def get_full_details(self):
+        user = User.query.filter_by(user_id=self.user_id).first()
+        transaction = self.transaction
+        item = transaction.item if transaction else None
+
+        return {
+            "fine_id": self.fine_id,
+            "transaction_id": self.transaction_id,
+            "user_id": self.user_id,
+            "user_name": self.user.name if self.user else None,
+            "item_title": item.title if item else None,
+            "amount": self.amount,
+            "issued_on": self.issued_on.isoformat(),
+            "reason": self.reason,
+            "status": self.status.value,
+            "resolved_on": self.resolved_on.isoformat() if self.resolved_on else None
+        }
