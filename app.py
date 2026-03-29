@@ -12,8 +12,6 @@ db = SQLAlchemy(app)
 
 from models import*
 
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
