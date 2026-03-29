@@ -11,7 +11,6 @@ class NotificationType(Enum):
     OVERDUE = "Overdue"
     ITEM_RESERVED = "Item Reserved"
     WAITLISTED_ITEM = "Waitlisted Item"
-    FINE_ISSUED = "Fine Issued"
     FINE_PAID = "Fine Paid"
     ACCOUNT_UPDATE = "Account Update"
 
@@ -61,4 +60,13 @@ class Notification(db.Model):
             "is_read": self.is_read
         }
 
+# -------------------- Helper Functions --------------------- #
+
+def notify_item_reserved(user_id: str, item_title: str, start_date: datetime, due_date: datetime):
+    message = (f"You have successfully reserved '{item_title}'. \n"
+               f"Loan Details: \n Start Date: {start_date.strftime('%Y-%m-%d')} \nDue Date: {due_date.strftime('%Y-%m-%d')}")
+    notification = Notification(user_id, NotificationType.ITEM_RESERVED, message)
+    notification.send()
+
+def 
     
