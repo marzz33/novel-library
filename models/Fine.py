@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
 from models.Items import Item
+from models.Transaction import TransactionStatus
 from models.users import User
 
 def utcnow():
@@ -33,14 +34,14 @@ class Fine(db.Model):
     transaction          = db.relationship("Transaction", backref="fines")
 
     def __init__(self, user_id: str, transaction_id: str, amount: float, reason: str):
-        self._fine_id         = str(uuid.uuid4())
-        self._transaction_id  = transaction_id
-        self._user_id         = user_id
-        self._amount          = amount
-        self._issued_on        = utcnow()
-        self._status           = FineStatus.UNPAID
-        self._resolved_on      = None
-        self._reason           = reason
+        self.fine_id         = str(uuid.uuid4())
+        self.transaction_id  = transaction_id
+        self.user_id         = user_id
+        self.amount          = amount
+        self.issued_on        = utcnow()
+        self.status           = FineStatus.UNPAID
+        self.resolved_on      = None
+        self.reason           = reason
 
     # Member uses this function to pay their fine, it will also check if the fine has
     # already been paid or waived before allowing the user to pay
@@ -49,9 +50,9 @@ class Fine(db.Model):
             raise ValueError("Fine has already been waived.")
         elif self.status == FineStatus.PAID:
             raise ValueError("Fine has already been paid.")
-        else:
-            self.status = FineStatus.PAID
-            db.session.commit()
+        self.status = FineStatus.PAID
+        self.resolved_on = utcnow()
+        db.session.commit()
 
     # Admin uses this function to waive a fine, it will also check if the fine has already been paid
     # or waived before allowing the admin to waive the fine
@@ -60,15 +61,29 @@ class Fine(db.Model):
             raise ValueError("Fine has already been paid and cannot be waived.")
         elif self.status == FineStatus.WAIVED:
             raise ValueError("Fine has already been waived.")
-        else:
-            self.status = FineStatus.WAIVED
-            db.session.commit()
+        
+        self.status = FineStatus.WAIVED
+        self.resolved_on = utcnow()
+        db.session.commit()
 
     def get_status(self):
         return self.status
     
     def unpaid_fines(self):
         return self.status == FineStatus.UNPAID
+    
+    def calculate_fine(self):
+        if self.status != TransactionStatus.OVERDUE or self.transaction is None:
+            return 0.0
+        
+        check = self.transaction
+        if check.due_date is None:
+            return 0.0
+        
+        overdue_days = (utcnow() - check.due_date).days
+        rate = 10.0 if check.item_type == "computer" else 1.0
+        return  max(0.0, rate * overdue_days)
+
     
     # Allows members to view their fines with basic details, it will also allow admins to
     # view fines with basic details when viewing a user's profile
