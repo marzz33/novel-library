@@ -57,4 +57,6 @@ class Reservation(db.Model):
         if self.status == ReseravtionStatus.CONFIRMED and self.start_date is not None and self.start_date < utcnow():
             self.status = ReseravtionStatus.EXPIRED
             db.session.commit()
+            return True
+        return False
     
