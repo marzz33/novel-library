@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 from app import db
 import uuid
@@ -35,7 +35,7 @@ class Item(db.Model):
         'polymorphic_identity': 'item'
     }
 
-    def __init__(self, title: str, description: str, qty: int, item_type: str):
+    def __init__(self, title: str, description: str | None, qty: int, item_type: str):
         self.item_id       = str(uuid.uuid4())
         self.title         = title
         self.description   = description
@@ -50,7 +50,7 @@ class Item(db.Model):
     
     # Returns boolean indicating if the item can be renewed based on its type and any specific rules (e.g. max renewals, holds, etc.)
     # Base method returns False and can be overridden in subclasses for specific item types with their own renewal rules.
-    def is_renewable(self):
+    def is_renewable(self) -> bool:
         return False
     
     def get_type(self):
@@ -98,3 +98,135 @@ class Item(db.Model):
         db.session.add(reservation)
         db.session.commit()
         return reservation
+    
+class Book(Item):
+
+    __tablename__ = "Books"
+
+    id = db.Column(db.Integer, db.ForeignKey('Items.id'), primary_key=True)
+    isbn = db.Column(db.String(35), unique=True, nullable=True)
+    author = db.Column(db.String(150), nullable=False)
+    publisher = db.Column(db.String(100), nullable=True)
+    genre = db.Column(db.String(150), nullable=True)
+    edition = db.Column(db.String(50), nullable=True)
+    loan_days = 28
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Book'
+    }
+
+    # super() is used to call the __init__ method of the parent Item class to set common attributes,
+    # then sets book-specific attributes like isbn, author, etc.
+    def __init__(self, title: str, qty: int, author: str, isbn: str | None, publisher: str | None,
+                 genre: str | None, edition: str | None, description: str | None):
+        super().__init__(title, description, qty, 'Book')
+        self.author = author
+        self.isbn = isbn
+        self.publisher = publisher
+        self.genre = genre
+        self.edition = edition
+
+    # Get the type of item, used in routes to determine which subclass it is when returning details as JSON
+    def get_type(self):
+        return "Book"
+    
+    # Overrides the base is_renewable method to allow books to be renewable, can add specific rules here if needed (e.g. max renewals, holds, etc.)
+    def is_renewable(self):
+        return True
+    
+    def get_due_date(self):
+        return utcnow() + timedelta(days=self.loan_days)
+    
+    def get_details(self):
+        details = super().get_details()
+        details.update({
+            "isbn": self.isbn,
+            "author": self.author,
+            "publisher": self.publisher,
+            "genre": self.genre,
+            "edition": self.edition
+        })
+        return details
+    
+class Movie(Item):
+
+    __tablename__ = "Movies"
+
+    id = db.Column(db.Integer, db.ForeignKey('Items.id'), primary_key=True)
+    genre = db.Column(db.String(100), nullable=True)
+    rating = db.Column(db.String(10), nullable=True)
+    format = db.Column(db.Enum(MovieFormat), nullable=False)
+    release_year = db.Column(db.Integer, nullable=True)
+    director = db.Column(db.String(100), nullable=False)
+    loan_days = 7
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Movie'
+    }
+
+    def __init__(self, title: str, qty: int, format: MovieFormat, genre: str | None, rating: str | None,
+                release_year: int | None, director: str | None, description: str | None):
+        super().__init__(title, description, qty, 'Movie')
+        self.format = format
+        self.genre = genre
+        self.rating = rating
+        self.release_year = release_year
+        self.director = director
+
+    def get_type(self):
+        return "Movie"
+    
+    def is_renewable(self):
+        return True
+    
+    def get_due_date(self):
+        return utcnow() + timedelta(days = self.loan_days)
+
+    def get_details(self):
+        details = super().get_details()
+        details.update({
+            "genre": self.genre,
+            "rating": self.rating,
+            "format": self.format.value,
+            "release_year": self.release_year,
+            "director": self.director
+        })
+        return details
+
+class Computer(Item):
+
+    __tablename__ = "Computers"
+    
+    id = db.Column(db.Integer, db.ForeignKey('Items.id'), primary_key=True)
+    serial_number = db.Column(db.String(50), unique=True, nullable=False)
+    os = db.Column(db.String(50), nullable=False)
+    specs = db.Column(db.String(350), nullable=True)
+    brand = db.Column(db.String(50), nullable=True)
+    condition = db.Column(db.Enum(Condition), nullable=False)
+    last_maintenance = db.Column(db.DateTime, nullable=True)
+    loan_days = 140
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Computer'
+    }
+
+    def get_type(self):
+        return "Computer"
+    
+    def get_due_date(self):
+        return utcnow() + timedelta(days = self.loan_days)
+    
+    def is_renewable(self):
+        return False
+    
+    def get_details(self):
+        details = super().get_details()
+        details.update({
+            "serial_number": self.serial_number,
+            "os": self.os,
+            "specs": self.specs,
+            "brand": self.brand,
+            "condition": self.condition.value,
+            "last_maintenance": self.last_maintenance.isoformat() if self.last_maintenance else None
+        })
+        return details
