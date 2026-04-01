@@ -1,9 +1,12 @@
-from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any
 from app import db, bcrypt
 import uuid                                 # Generates new random ID for each user
 from flask_login import UserMixin
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 class UserRole(Enum):
     GUEST  = "Guest"
@@ -13,9 +16,6 @@ class UserRole(Enum):
 class MemberStatus(Enum):
     ACTIVE = "Active"
     INACTIVE = "Suspended"
-
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 # Abstract Base Class for Users
 class User(UserMixin, db.Model):
@@ -32,14 +32,35 @@ class User(UserMixin, db.Model):
 
     __mapper_args__ = {
             'polymorphic_on':       role,
-            'polymorphic_identity': 'user'
+            'polymorphic_identity': UserRole.GUEST
         }
 
     def __init__(self, user_id: str, name: str, email: str,
                  password_hash: str, phone: str):
-        self._user_id       = str(uuid.uuid4())
-        self._name          = name
-        self._email         = email
-        self._password      = bcrypt.generate_password_hash(password_hash).decode("utf-8")
-        self._phone         = phone
-        self._added_on      = utcnow()
+        self.user_id       = str(uuid.uuid4())
+        self.name          = name
+        self.email         = email
+        self.password      = bcrypt.generate_password_hash(password_hash).decode("utf-8")
+        self.phone         = phone
+        self.added_on      = utcnow()
+
+    # This function allows us to check if the password provided by the user matches the hashed password stored in the database
+    def check_password(self, password) -> bool:
+        return bcrypt.check_password_hash(self.password, password)
+    
+    # This function is required by Flask-Login to get the unique identifier for the user, which in this case is the user_id
+    def get_id(self):
+        return self.user_id
+    
+    def get_role(self):
+        return self.role
+    
+    def update_profile(self, name: str = None, email: str = None, phone: str = None):
+        if name:
+            self.name = name
+        if email:
+            self.email = email
+        if phone:
+            self.phone = phone
+        db.session.commit()
+    
