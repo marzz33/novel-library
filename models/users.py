@@ -36,7 +36,7 @@ class User(UserMixin, db.Model):
         }
 
     def __init__(self, user_id: str, name: str, email: str,
-                 password_hash: str, phone: str):
+                 password_hash: str, phone: str | None = None):
         self.user_id       = str(uuid.uuid4())
         self.name          = name
         self.email         = email
@@ -55,7 +55,7 @@ class User(UserMixin, db.Model):
     def get_role(self):
         return self.role
     
-    def update_profile(self, name: str = None, email: str = None, phone: str = None):
+    def update_profile(self, name: str | None = None, email: str | None = None, phone: str | None = None):
         if name:
             self.name = name
         if email:
@@ -64,3 +64,31 @@ class User(UserMixin, db.Model):
             self.phone = phone
         db.session.commit()
     
+class Guest(User):
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserRole.GUEST
+    }
+
+    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
+        # We call the parent constructor using super() to initialize the common fields, and then set the role to GUEST
+        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
+        self.role = UserRole.GUEST
+
+class Member(User):
+    
+    memeber_since = db.Column(db.DateTime, default=utcnow)
+    status = db.Column(db.Enum(MemberStatus), nullable=False, default=MemberStatus.ACTIVE)
+    max_loanable_items = db.Column(db.Integer, default=4)
+    max_loanable_computers = db.Column(db.Integer, default=1)
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserRole.MEMBER
+    }
+
+    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
+        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
+        self.role = UserRole.MEMBER
+        self.memeber_since = utcnow()
+        self.status = MemberStatus.ACTIVE
+        
