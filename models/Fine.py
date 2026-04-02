@@ -2,9 +2,6 @@ from app import db
 from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
-from models.Items import Item
-from models.Transaction import TransactionStatus
-from models.users import User
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -69,21 +66,24 @@ class Fine(db.Model):
     def get_status(self):
         return self.status
     
-    def unpaid_fines(self):
-        return self.status == FineStatus.UNPAID
+    @staticmethod
+    def get_unpaid_fines(user_id): 
+        return Fine.query.filter_by(user_id = user_id, status = FineStatus.UNPAID).all()
     
     def calculate_fine(self):
-        if self.status != TransactionStatus.OVERDUE or self.transaction is None:
-            return 0.0
-        
-        check = self.transaction
-        if check.due_date is None:
-            return 0.0
-        
-        overdue_days = (utcnow() - check.due_date).days
-        rate = 10.0 if check.item_type == "computer" else 1.0
-        return  max(0.0, rate * overdue_days)
 
+        from models.Transaction import TransactionStatus
+
+        check_tran = self.transaction
+        if check_tran is None and check_tran.due_date is None:
+            return 0.0
+        
+        overdue_days = (utcnow() - check_tran.due_date).days
+        if overdue_days <= 0:
+            return 0.0
+        
+        rate = 10.0 if check_tran.item_type == "computer" else 1.0
+        return  round(0.0, rate * overdue_days)
     
     # Allows members to view their fines with basic details, it will also allow admins to
     # view fines with basic details when viewing a user's profile
@@ -102,9 +102,11 @@ class Fine(db.Model):
     # Allows admins to view fines with full details when viewing a transaction or when viewing
     # all fines in the system, it will include user and item details for the transaction associated with the fine
     def get_full_details(self):
-        user = User.query.filter_by(user_id=self.user_id).first()
-        transaction = self.transaction
-        item = transaction.item if transaction else None
+        transaction1 = self.transaction
+
+        # Prevents a crash in the unlikely event that a fine is created for a transaction that doesn't exist/deleted,
+        # it will just return None for the item title in this case instead of crashing the system
+        item = transaction1.item if transaction1 else None
 
         return {
             "fine_id": self.fine_id,
