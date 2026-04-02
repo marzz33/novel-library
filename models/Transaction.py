@@ -90,14 +90,17 @@ class Transaction(db.Model):
     def create_fine(self):
         from models.Fine import Fine
 
-        if self.status != TransactionStatus.OVERDUE:
+        # Checks if a fine has already been created for this transaction to prevent duplicate fines from being created
+        # If it finds a fine for this transaction it will just return, otherwise it will create a new fine for this transaction
+
+        check = Fine.query.filter_by(transaction_id=self.transaction_id).first()
+        if check:
             return
-        
+
         fine = Fine(
-            user_id=self.user_id,
-            transaction_id=self.transaction_id,
-            amount=self.calculate_fine(),
-            reason=f"Overdue {self.item_type.lower()}: '{self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}'"
+            user_id = self.user_id,
+            transaction_id = self.transaction_id,
+            reason=f"Overdue {self.item_type}: '{self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}'"
         )
         db.session.add(fine)
         db.session.commit()
@@ -150,7 +153,6 @@ class Transaction(db.Model):
             "returned_date": self.returned_date.isoformat() if self.returned_date else None,
             "status": self.status.value,
             "overdue": self.status == TransactionStatus.OVERDUE,
-            "late_fee": self.calculate_fine()
         }
     def get_full_details(self):
         return {
@@ -173,5 +175,4 @@ class Transaction(db.Model):
             "returned_date": self.returned_date.isoformat() if self.returned_date else None,
             "status": self.status.value,
             "overdue": self.status == TransactionStatus.OVERDUE,
-            "late_fee": self.calculate_fine()
         }
