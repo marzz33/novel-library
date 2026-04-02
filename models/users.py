@@ -9,7 +9,6 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 class UserRole(Enum):
-    GUEST  = "Guest"
     MEMBER = "Member"
     ADMIN  = "Admin"
 
@@ -19,7 +18,9 @@ class MemberStatus(Enum):
 
 # Abstract Base Class for Users
 class User(UserMixin, db.Model):
+
     __tablename__ = "users"
+
     id              = db.Column(db.Integer, primary_key=True)
     user_id         = db.Column(db.String(36), unique=True, nullable=False)
     name            = db.Column(db.String(80), nullable=False)
@@ -32,7 +33,7 @@ class User(UserMixin, db.Model):
 
     __mapper_args__ = {
             'polymorphic_on':       role,
-            'polymorphic_identity': UserRole.GUEST
+            'polymorphic_identity': UserRole.MEMBER
         }
 
     def __init__(self, user_id: str, name: str, email: str,
@@ -63,17 +64,14 @@ class User(UserMixin, db.Model):
         if phone:
             self.phone = phone
         db.session.commit()
+
+    def get_notifications(self):
+        from models.Notifications import Notification
+
+        # Function retrieves all notifications for the user, ordered by the date they were sent in descending order (most recent)
+        notifs = Notification.query.filter_by(user_id=self.user_id).order_by(db.desc(Notification.sent_on)).all()
+        return notifs
     
-class Guest(User):
-
-    __mapper_args__ = {
-        'polymorphic_identity': UserRole.GUEST
-    }
-
-    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
-        # We call the parent constructor using super() to initialize the common fields, and then set the role to GUEST
-        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
-        self.role = UserRole.GUEST
 
 class Member(User):
     
@@ -91,4 +89,34 @@ class Member(User):
         self.role = UserRole.MEMBER
         self.memeber_since = utcnow()
         self.status = MemberStatus.ACTIVE
+
+    def check_loan_limits(self, item) -> bool:
+        from models.Transaction import Transaction, TransactionType, TransactionStatus
+
+        # Count active loans for the user
+        active_loans = Transaction.query.filter(Transaction.user_id == self.user_id,    # type: ignore
+                                                Transaction.transaction_type == TransactionType.LOAN,   # type: ignore
+                                                db.or_(
+                                                    Transaction.status == TransactionStatus.ACTIVE,
+                                                    Transaction.status == TransactionStatus.OVERDUE
+                                                )).count()
         
+        if active_loans >= self.max_loanable_items:
+            return False
+        
+        if item.get_type() == "Computer":
+
+            # Count active computer loans for the user
+            active_computers = Transaction.query.filter(Transaction.user_id == self.user_id,    # type: ignore
+                                                        Transaction.transaction_type == TransactionType.LOAN,   # type: ignore
+                                                        Transaction.item_type == "Computer",                 # type: ignore
+                                                        db.or_(
+                                                            Transaction.status == TransactionStatus.ACTIVE,
+                                                            Transaction.status == TransactionStatus.OVERDUE
+                                                        )).count()
+            
+            if active_computers >= self.max_loanable_computers:
+                return False
+            
+        return True
+    
