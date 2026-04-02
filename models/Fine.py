@@ -30,11 +30,11 @@ class Fine(db.Model):
     user                 = db.relationship("User", backref="fines")
     transaction          = db.relationship("Transaction", backref="fines")
 
-    def __init__(self, user_id: str, transaction_id: str, amount: float, reason: str):
+    def __init__(self, user_id: str, transaction_id: str, reason: str):
         self.fine_id         = str(uuid.uuid4())
         self.transaction_id  = transaction_id
         self.user_id         = user_id
-        self.amount          = amount
+        self.amount          = self.calculate_fine()
         self.issued_on        = utcnow()
         self.status           = FineStatus.UNPAID
         self.resolved_on      = None
