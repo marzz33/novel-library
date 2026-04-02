@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
 from models.Items import Item
-from models.users import User
+
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -27,7 +27,6 @@ class Transaction(db.Model):
     user_id              = db.Column(db.String(45), db.ForeignKey("Users.user_id"), nullable=False)
     item_id              = db.Column(db.String(45), db.ForeignKey("Items.item_id"), nullable=False)
     transaction_type     = db.Column(db.Enum(TransactionType), nullable=False)
-    status               = db.Column(db.Enum(TransactionStatus), nullable=False)
     
     # Added item_type again in the event we need to query transactions by item type without importing Items
     # while also allowing one to view a transaction incase it is removed from our inventory
@@ -45,12 +44,11 @@ class Transaction(db.Model):
     item                 = db.relationship("Item", backref="transactions")
 
     def __init__(self, user_id: str, item_id: str, transaction_type: TransactionType, item_type: str):
-        self._transaction_id      = str(uuid.uuid4())
-        self._user_id             = user_id
-        self._item_id             = item_id
-        self._transaction_type    = transaction_type
-        self._item_type           = item_type
-        self.status               = TransactionStatus.ACTIVE
+        self.transaction_id      = str(uuid.uuid4())
+        self.user_id             = user_id
+        self.item_id             = item_id
+        self.transaction_type    = transaction_type
+        self.item_type           = item_type
         self.date                 = utcnow()
 
         # This allows a transaction to close itself if it is a return transaction,
@@ -60,59 +58,91 @@ class Transaction(db.Model):
             self.returned_date = utcnow()
             self.status = TransactionStatus.COMPLETED
         else:
-            self.status = TransactionStatus.ACTIVE
             self.returned_date = None
+            self.status = TransactionStatus.ACTIVE
 
         # This sets the due date based on the item type,
         # it will be used for both loan and renewed transactions
-        if item_type == "Book":
-            self.due_date = self.date + timedelta(days=28)
-        elif item_type == "Movie":
-            self.due_date = self.date + timedelta(days=7)
-        else:
-            self.due_date = self.date + timedelta(days=140)
+            if item_type == "Book":
+                self.due_date = self.date + timedelta(days=28)
+            elif item_type == "Movie":
+                self.due_date = self.date + timedelta(days=7)
+            else:
+                self.due_date = self.date + timedelta(days=140)
 
     # This method marks a transaction as completed when a return transaction is created,
     # it will also update the returned date and increase the available quantity of the item in inventory
     def completed(self):
+
+        from models.Reservation import Reservation
+
         self.status = TransactionStatus.COMPLETED
         self.returned_date = utcnow()
         item = Item.query.filter_by(item_id=self.item_id).first()
         if item:
             item.available_qty += 1
-            db.session.commit()
+
+        db.session.commit()
+
+        if item and not Reservation.is_empty(self.item_id):
+            Reservation.notify_next_in_queue(self.item_id)
+
+    def create_fine(self):
+        from models.Fine import Fine
+
+        if self.status != TransactionStatus.OVERDUE:
+            return
+        
+        fine = Fine(
+            user_id=self.user_id,
+            transaction_id=self.transaction_id,
+            amount=self.calculate_fine(),
+            reason=f"Overdue {self.item_type.lower()}: '{self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}'"
+        )
+        db.session.add(fine)
+        db.session.commit()
 
     # This method checks if a transaction is overdue, if it is it will update the status to overdue and return true, 
     # otherwise it will return false
-    def overdue(self):
-        if (self.status == TransactionStatus.ACTIVE and self.due_date is not None and self.due_date < utcnow()):
+    def is_overdue(self):
+        if self.status == TransactionStatus.ACTIVE and self.due_date is not None and self.due_date < utcnow():
             self.status = TransactionStatus.OVERDUE
             db.session.commit()
-
-            # Fine & Notification triggers will go here once they are created and implemented
+            self.create_fine()
             return True
         return False
     
-    # Calculates how much a user owes in fines for an overdue transaction,
-    # it will return 0 if the transaction is not overdue or if the due date is not set
-    def calculate_fine(self):
-        if self.status != TransactionStatus.OVERDUE or self.due_date is None:
-            return 0.0
-        
-        overdue_days = (utcnow() - self.due_date).days
-        if self.item_type == "Computer":
-            fine_rate = 10.0
+    def renew(self):
+        if self.status != TransactionStatus.ACTIVE:
+            raise ValueError("Only active transactions can be renewed.")
+
+        item = Item.query.filter_by(item_id = self.item_id).first()
+        if item and not item.is_renewable():
+            raise ValueError(f"{item.title} is not eligible for renewal.")
+
+        if self.item_type == "Book":
+            self.due_date = utcnow() + timedelta(days=28)
+        elif self.item_type == "Movie":
+            self.due_date = utcnow() + timedelta(days=7)
         else:
-            fine_rate = 1.0
-        return fine_rate * overdue_days
+            self.due_date = utcnow() + timedelta(days=140)
+        
+        renewed_transaction = Transaction(
+            user_id = self.user_id,
+            item_id = self.item_id,
+            transaction_type = TransactionType.RENEWED,
+            item_type = self.item_type
+        )
+        db.session.add(renewed_transaction)
+        db.session.commit()
+        return renewed_transaction
 
     def get_summary(self):
-        item = Item.query.filter_by(item_id=self.item_id).first()
         return {
             "transaction_id": self.transaction_id,
             "user_id": self.user_id,
             "item_id": self.item_id,
-            "title": item.title if item else None,
+            "title": self.item.title if self.item else None,
             "transaction_type": self.transaction_type.value,
             "item_type": self.item_type,
             "date": self.date.isoformat(),
