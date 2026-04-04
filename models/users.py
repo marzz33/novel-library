@@ -6,6 +6,8 @@ import uuid                                 # Generates new random ID for each u
 from flask_login import UserMixin
 from models.Transaction import Transaction
 from models.Fine import Fine, FineStatus
+from models.Reservation import Reservation
+
 
 
 
@@ -170,3 +172,29 @@ class Member(User):
     def has_unpaid_fines(self):
         unpaid_fines = Fine.query.filter_by(user_id = self.user_id, status = FineStatus.UNPAID).count()
         return unpaid_fines > 0
+    
+    def view_reservations(self):
+        reservations = Reservation.query.filter_by(user_id = self.user_id).all()
+        return reservations
+    
+    def cancel_reservation(self, reservation_id: str):
+
+        reservation = Reservation.query.filter_by(reservation_id = reservation_id, user_id = self.user_id).first()
+        if not reservation:
+            raise ValueError("Reservation not found.")
+        
+        reservation.cancel()
+        return True
+    
+    def get_role(self):
+        return UserRole.MEMBER
+    
+class Admin(User):
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserRole.ADMIN
+    }
+
+    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
+        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
+        self.role = UserRole.ADMIN
