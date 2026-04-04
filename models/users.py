@@ -33,7 +33,15 @@ class User(UserMixin, db.Model):
     phone           = db.Column(db.String(20), nullable=True)
     added_on        = db.Column(db.DateTime, default=utcnow)
     role            = db.Column(db.Enum(UserRole), nullable=False)
-    status          = db.Column(db.Enum(MemberStatus), nullable=False)
+    status          = db.Column(db.Enum(MemberStatus), nullable=True)
+    
+    # Added due to SQLAlchemy error
+    # Keeps member from trying to add additional columns instead of inheriting from the User class
+    memeber_since = db.Column(db.DateTime, nullable=  True)
+    max_loanable_items = db.Column(db.Integer, nullable = True, default=4)
+    max_loanable_computers = db.Column(db.Integer, nullable = True, default=1)
+    
+    Permissions     = db.Column(db.JSON, nullable=True)
 
     __mapper_args__ = {
             'polymorphic_on':       role,
@@ -78,11 +86,6 @@ class User(UserMixin, db.Model):
     
 
 class Member(User):
-    
-    memeber_since = db.Column(db.DateTime, default=utcnow)
-    status = db.Column(db.Enum(MemberStatus), nullable=False, default=MemberStatus.ACTIVE)
-    max_loanable_items = db.Column(db.Integer, default=4)
-    max_loanable_computers = db.Column(db.Integer, default=1)
 
     __mapper_args__ = {
         'polymorphic_identity': UserRole.MEMBER
