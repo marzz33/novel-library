@@ -23,9 +23,9 @@ def books():
 
 @app.route('/login', methods = ["POST", "GET"])
 def login():
-    return render_template('index.html')
+    return render_template('login.html')
 
-@app.route("/signup", methods = ["GET", "POST"])
+@app.route("/signup", methods = ["POST", "GET"])
 def signup():
     return render_template('signup.html')
 

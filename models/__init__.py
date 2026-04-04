@@ -1,8 +1,8 @@
 from models.users import User
 from models.Items import Item
-from models.book import Book
-from models.movie import Movie
-from models.computer import Computer
+from models.Book import Book
+from models.Movie import Movie
+from models.Computer import Computer
 
 __all__ = ["User", "Item", "Book", "Movie", "Computer"]
 print("Initializing package")
