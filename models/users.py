@@ -198,3 +198,48 @@ class Admin(User):
     def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
         super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
         self.role = UserRole.ADMIN
+        self.permissions = []
+
+    def promote_to_admin(self, user_id: str):
+        user = User.query.filter_by(user_id = user_id).first()
+        if not user:
+            raise ValueError("User not found. Make sure the user ID is correct.")
+        
+        user.role = UserRole.ADMIN
+        db.session.commit()
+    
+    def demote_to_member(self, user_id: str):
+        user = User.query.filter_by(user_id = user_id).first()
+        if not user:
+            raise ValueError("User not found. Make sure the User ID is correct.")
+        
+        user.role = UserRole.MEMBER
+        db.session.commit()
+
+    def waive_fine(self, fine_id: str):
+        fine = Fine.query.filter_by(fine_id = fine_id).first()
+        if not fine:
+            raise ValueError("Fine not found. Make sure the fine ID is correct.")
+        
+        fine.waive()
+        return True
+    
+    def approve_reservation(self, reservation_id: str):
+        reservation = Reservation.query.filter_by(reservation_id = reservation_id).first()
+        if not reservation:
+            raise ValueError("Reservation not found. Make sure the reservation ID is correct.")
+        
+        reservation.mark_ready()
+        return True
+    
+    def manage_user_status(self, user_id: str, new_status: MemberStatus):
+        user = User.query.all()
+        if not user:
+            raise ValueError("User not found. Make sure the user ID is correct.")
+        
+        if new_status not in MemberStatus:
+            raise ValueError("Invalid status. Status must be either 'Active' or 'Suspended'.")
+        
+    def get_role(self):
+        return UserRole.ADMIN
+    
