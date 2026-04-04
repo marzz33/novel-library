@@ -303,8 +303,12 @@
                 </ul>
 
                 <div>
-                    <button class ="login-btn">Log In</button>
-                    <button class ="signup-btn">Sign Up</button>
+                    <a href = "{{url_for('login')}}">
+                        <button class ="login-btn">Log In</button>
+                    </a>
+                    <a href = "{{url_for('signup')}}">
+                        <button class ="signup-btn">Sign Up</button>
+                    </a>
                 </div>
 
             </nav>
