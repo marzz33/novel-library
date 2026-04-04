@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
@@ -20,6 +20,14 @@ def index():
 def books():
     all_books = Book.query.all()
     return render_template('books.html', books=all_books)
+
+@app.route('/login', methods = ["POST", "GET"])
+def login():
+    return render_template('index.html')
+
+@app.route("/signup", methods = ["GET", "POST"])
+def signup():
+    return render_template('signup.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
