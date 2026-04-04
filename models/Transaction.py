@@ -93,7 +93,7 @@ class Transaction(db.Model):
         # Checks if a fine has already been created for this transaction to prevent duplicate fines from being created
         # If it finds a fine for this transaction it will just return, otherwise it will create a new fine for this transaction
 
-        check = Fine.query.filter_by(transaction_id=self.transaction_id).first()
+        check = Fine.query.filter_by(transaction_id = self.transaction_id).first()
         if check:
             return
 
@@ -130,15 +130,8 @@ class Transaction(db.Model):
         else:
             self.due_date = utcnow() + timedelta(days=140)
         
-        renewed_transaction = Transaction(
-            user_id = self.user_id,
-            item_id = self.item_id,
-            transaction_type = TransactionType.RENEWED,
-            item_type = self.item_type
-        )
-        db.session.add(renewed_transaction)
+        self.transaction_type = TransactionType.RENEWED
         db.session.commit()
-        return renewed_transaction
 
     def get_summary(self):
         return {
