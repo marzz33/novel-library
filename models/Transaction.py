@@ -85,7 +85,7 @@ class Transaction(db.Model):
         db.session.commit()
 
         if item and not Reservation.is_empty(self.item_id):
-            Reservation.notify_next_in_queue(self.item_id)
+            Reservation.notify_next(self.item_id)
 
     def create_fine(self):
         from models.Fine import Fine
