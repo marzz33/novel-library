@@ -5,6 +5,8 @@ from app import db, bcrypt
 import uuid                                 # Generates new random ID for each user
 from flask_login import UserMixin
 from models.Transaction import Transaction
+from models.Fine import Fine, FineStatus
+
 
 
 def utcnow() -> datetime:
@@ -154,4 +156,14 @@ class Member(User):
         transaction.renew()
         return True
     
+    def view_transactions(self):
+        transactions = Transaction.query.filter_by(user_id = self.user_id).order_by(db.desc(Transaction.date)).all()
+        return transactions
     
+    def view_fines(self):
+        fines = Fine.query.filter_by(user_id = self.user_id).order_by(db.desc(Fine.issued_on)).all()
+        return fines
+    
+    def has_unpaid_fines(self):
+        unpaid_fines = Fine.query.filter_by(user_id = self.user_id, status = FineStatus.UNPAID).count()
+        return unpaid_fines > 0
