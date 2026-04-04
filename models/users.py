@@ -4,6 +4,8 @@ from typing import Any
 from app import db, bcrypt
 import uuid                                 # Generates new random ID for each user
 from flask_login import UserMixin
+from models.Transaction import Transaction
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -119,4 +121,37 @@ class Member(User):
                 return False
             
         return True
+    
+    def loan_items(self, item):
+        if not self.check_loan_limits(item):
+            raise Exception("Loan limit reached. Please return some items before being able to checkout more.")
+        return item.loan(self.user_id)
+    
+    def reserve_items(self, item_id: str):
+        from models.Items import Item
+
+        item = Item.query.filter_by(item_id=item_id).first()
+        if not item:
+            raise ValueError("Item not found.")
+
+        return item.reserve(self.user_id)
+    
+    def return_items(self, transaction_id: str):
+
+        transaction = Transaction.query.filter_by(transaction_id = transaction_id, user_id = self.user_id).first()
+        if not transaction:
+            raise ValueError("Transaction not found.")
+        
+        transaction.completed()
+        return True
+    
+    def renew_loans(self, transaction_id: str):
+
+        transaction = Transaction.query.filter_by(transaction_id = transaction_id, user_id = self.user_id).first()
+        if not transaction:
+            raise ValueError("Transaction not found.")
+        
+        transaction.renew()
+        return True
+    
     
