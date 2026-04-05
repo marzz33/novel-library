@@ -120,6 +120,24 @@
             background: transparent;
         }
 
+        /* profile icon ! ------------------- */
+
+        .profile-icon {
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .profile-icon i {
+            cursor: pointer;
+            background: none;
+            color:#5f4d43;
+        }
+
+        .profile-icon i:hover {
+            color: #96a090;
+            transition: 0.3s ease;
+        }
+
         /* navigation bar ! ------------------- */
         header {
             background: #fff;
@@ -304,6 +322,11 @@
 
                 <div>
                     {% if current_user.is_authenticated %}
+                        <div class = "profile-icon">
+                            <a href = "{{url_for('profile')}}">
+                                <i class="fa-solid fa-user"></i>
+                            </a>
+                        </div>
                         <a href = "{{url_for('logout')}}">
                             <button class ="login-btn">Log Out</button>
                         </a>
