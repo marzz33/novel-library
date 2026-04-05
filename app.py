@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin
+from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin, current_user
 
 app = Flask(__name__)
 
@@ -53,6 +53,17 @@ def signup():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/profile', methods = ["POST", "GET"])
+@login_required
+def profile():
+    if request.method == "POST":
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        current_user.update_profile(name=name, email=email, phone=phone)
+        return redirect(url_for('profile'))
+    return render_template('profile.html', user = current_user)
 
 if __name__ == '__main__':
     app.run(debug=True)
