@@ -87,20 +87,25 @@ class Transaction(db.Model):
         if item and not Reservation.is_empty(self.item_id):
             Reservation.notify_next(self.item_id)
 
+     # Transaction creates the initial fine record when a transaction becomes overdue, it will
+    # check if a fine already exists for this transaction before creating a new one to avoid duplicates
     def create_fine(self):
         from models.Fine import Fine
-
-        # Checks if a fine has already been created for this transaction to prevent duplicate fines from being created
-        # If it finds a fine for this transaction it will just return, otherwise it will create a new fine for this transaction
-
+        
+        # Check if a fine already exists for this transaction and avoids having multiple
         check = Fine.query.filter_by(transaction_id = self.transaction_id).first()
         if check:
             return
 
+        overdue_days = (utcnow() - self.due_date).days if self.due_date else 0
+        rate = 10.0 if self.item_type == "Computer" else 1.0
+        amount = round(rate * overdue_days, 2)
+
         fine = Fine(
             user_id = self.user_id,
             transaction_id = self.transaction_id,
-            reason=f"Overdue {self.item_type}: '{self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}'"
+            reason = f"Overdue {self.item_type}: {self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}",
+            amount = amount
         )
         db.session.add(fine)
         db.session.commit()
