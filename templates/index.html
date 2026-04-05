@@ -303,12 +303,18 @@
                 </ul>
 
                 <div>
-                    <a href = "{{url_for('login')}}">
-                        <button class ="login-btn">Log In</button>
-                    </a>
-                    <a href = "{{url_for('signup')}}">
-                        <button class ="signup-btn">Sign Up</button>
-                    </a>
+                    {% if current_user.is_authenticated %}
+                        <a href = "{{url_for('logout')}}">
+                            <button class ="login-btn">Log Out</button>
+                        </a>
+                    {% else %}
+                        <a href = "{{url_for('login')}}">
+                            <button class ="login-btn">Log In</button>
+                        </a>
+                        <a href = "{{url_for('signup')}}">
+                            <button class ="signup-btn">Sign Up</button>
+                        </a>
+                    {% endif %}
                 </div>
 
             </nav>
