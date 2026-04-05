@@ -30,11 +30,11 @@ class Fine(db.Model):
     user                 = db.relationship("User", backref="fines")
     transaction          = db.relationship("Transaction", backref="fines")
 
-    def __init__(self, user_id: str, transaction_id: str, reason: str):
+    def __init__(self, user_id: str, transaction_id: str, reason: str, amount: float = 0.0):
         self.fine_id         = str(uuid.uuid4())
         self.transaction_id  = transaction_id
         self.user_id         = user_id
-        self.amount          = self.calculate_fine()
+        self.amount          = amount
         self.issued_on        = utcnow()
         self.status           = FineStatus.UNPAID
         self.resolved_on      = None
@@ -72,18 +72,16 @@ class Fine(db.Model):
     
     def calculate_fine(self):
 
-        from models.Transaction import TransactionStatus
-
-        check_tran = self.transaction
-        if check_tran is None and check_tran.due_date is None:
+        transaction = self.transaction
+        if transaction is None and transaction.due_date is None:
             return 0.0
         
-        overdue_days = (utcnow() - check_tran.due_date).days
+        overdue_days = (utcnow() - transaction.due_date).days
         if overdue_days <= 0:
             return 0.0
         
-        rate = 10.0 if check_tran.item_type == "computer" else 1.0
-        return  round(0.0, rate * overdue_days)
+        rate = 10.0 if transaction.item_type == "Computer" else 1.0
+        return  round(rate * overdue_days, 2)
     
     # Allows members to view their fines with basic details, it will also allow admins to
     # view fines with basic details when viewing a user's profile
