@@ -1,0 +1,15 @@
+{% extends "profile-layout.html" %}
+
+{% block title %}My Transactions{% endblock %}
+
+{% block content %}
+<h2 class="title">My Transactions</h2>
+
+{% if transactions %}
+    <!-- insert code -->
+{% else %}
+<p>No transactions found.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+{% endblock %}

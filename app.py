@@ -65,5 +65,10 @@ def profile():
         return redirect(url_for('profile'))
     return render_template('profile.html', user = current_user)
 
+@app.route('/transactions')
+@login_required
+def transactions():
+    return render_template('transactions.html', user = current_user)
+
 if __name__ == '__main__':
     app.run(debug=True)
