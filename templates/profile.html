@@ -35,7 +35,6 @@
         }
 
         /* side nav bar ! ------------------- */
-
         nav ul {
             margin: 0;
             padding: 0;
@@ -62,20 +61,21 @@
             color: #5f4d43;
             position: relative;
             padding: 10px 0 10px 25px;
+            /*left: 10%;*/
+
         }
 
         nav ul li a:before {
             content: '';
             position: absolute;
             top: 0;
-            right: 0;
-            width: 0;
+            right: 0%;
+            width: 0%;
             height: 100%;
             background: #96a090;
-            border-radius: 40px 0 0 40px;
+            border-radius: 40px 0px 0px 40px;
             z-index: -1;
             transition: all 300ms ease-in-out;
-
         }
 
         nav ul li a:hover {
@@ -92,7 +92,6 @@
             height: auto;
             display: block;
             margin: 25px auto;
-            overflow: hidden;
         }
 
         .logo img {
@@ -118,11 +117,8 @@
             background: var(--white);
             border-radius: var(--border-radius-m);
             box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-
             right: 5%;
             transform: translate(80%, 5%);
-
-
         }
 
         .profile {
@@ -193,6 +189,9 @@
                 </a><br></li>
 
             <li><a href="#"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines
+                </a><br></li>
+
+            <li><a href="#"><i class="fa-solid fa-credit-card"></i> &nbsp; Transactions
                 </a><br></li>
 
             <li><a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> &nbsp; Logout
