@@ -34,8 +34,12 @@ def login():
     if request.method == "POST":
         email = request.form['email']
         password = request.form['password']
-        # Handle Login logic here .....
-        pass
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error="Invalid email or password")
     return render_template('login.html')
 
 @app.route("/signup", methods = ["POST", "GET"])
