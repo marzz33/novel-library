@@ -40,10 +40,10 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            width: 260px;
+            width: 20%;
             position: fixed;
             top: 0;
-            left: 0;
+            left: 0%;
             background-color: #fffefc;
             box-shadow: 0.5rem 0 1rem rgba(0,0,0,.1);
         }
@@ -51,15 +51,17 @@
         nav ul li {
             list-style: none;
         }
+        
 
         nav ul li a {
-            display: block;
+            display: flex;
+            align-items: center;
             text-decoration: none;
             text-transform: uppercase;
             font-size: 20px;
             color: #5f4d43;
             position: relative;
-            padding: 25px 0 25px 25px;
+            padding: 10px 0 10px 25px;
         }
 
         nav ul li a:before {
@@ -111,13 +113,16 @@
         }
 
         .container {
-            margin-left: 520px;
-            margin-top: 150px;
             padding: 40px;
-            max-width: 1000px;
+            width: 40%;
             background: var(--white);
             border-radius: var(--border-radius-m);
             box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+
+            right: 5%;
+            transform: translate(80%, 5%);
+
+
         }
 
         .profile {
