@@ -11,15 +11,9 @@
 
     <style>
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--white);
             color: #5f4d43;
             font-family: 'Neuton', serif;
-
-            --border-radius-s: 8px;
-            --border-radius-m: 30px;
-            --border-radius-circle: 50%;
         }
 
         :root {
@@ -32,12 +26,36 @@
             --dark-cream: #c0bea8;
             --white: #fffefc;
             --brown-2: #5f4d43;
+            --border-radius-s: 8px;
+            --border-radius-m: 30px;
+            --border-radius-circle: 50%;
         }
 
-        /* side nav bar ! ------------------- */
-        nav ul {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        /* ------------------- layout grid ! ------------------- */
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ------------------- makes the box centered  ------------------- */
+        .content {
+            display: grid;
+            place-items: center;
+            padding: 40px;
+        }
+
+        /* ------------------- side nav bar ! ------------------- */
+        nav ul {
+            margin: 0;
+            padding: 20px 0;
             height: 100%;
             width: 20%;
             position: fixed;
@@ -51,7 +69,6 @@
             list-style: none;
         }
         
-
         nav ul li a {
             display: flex;
             align-items: center;
@@ -62,7 +79,6 @@
             position: relative;
             padding: 10px 0 10px 25px;
             /*left: 10%;*/
-
         }
 
         nav ul li a:before {
@@ -98,26 +114,24 @@
             width: 100%;
         }
 
-        /* Account Section ! ------------------- */
+        /* ------------------- form section ! ------------------- */
         .title {
-            font-size: 40px;
-            margin-top: 50px;
-        }
-
-        .box-area h2 {
-            text-transform: uppercase;
             font-size: 50px;
+            margin-top: 50px;
+            letter-spacing: 1px;
+            color: var(--green);
             text-align: center;
+            text-transform: uppercase;
         }
 
         .container {
             padding: 40px;
-            width: 40%;
+            width: 60%;
             background: var(--white);
             border-radius: var(--border-radius-m);
             box-shadow: 0 4px 30px rgba(0,0,0,0.1);
             right: 5%;
-            transform: translate(80%, 5%);
+            /* transform: translate(80%, 5%); */
         }
 
         .profile {
@@ -131,6 +145,7 @@
             display: block;
             margin-bottom: 5px;
             color: #838b7e;
+            letter-spacing: 1px;
         }
 
         .profile input {
@@ -141,9 +156,10 @@
             border: 1px solid #ccc;
             font-size: 15px;
             color: var(--brown-2);
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
+        /* ------------------- button ! ------------------- */
         .btn {
             display: block;
             width: 100%;
@@ -171,28 +187,32 @@
     </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <!-- don't mind the temporary joker picture -->
-            <li class="logo"><img src="https://pbs.twimg.com/media/HD_EVY7aUAAoFH3.jpg"></li>
+    <div class = "layout">
+        <nav>
+            <ul>
+                <!-- don't mind the temporary joker picture -->
+                <li class="logo"><img src="https://pbs.twimg.com/media/HD_EVY7aUAAoFH3.jpg"></li>
 
-            <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> &nbsp; Account</a><br></li>
+                <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> &nbsp; Account</a><br></li>
 
-            <li><a href="#"><i class="fa-solid fa-book"></i> &nbsp; Loans</a><br></li>
+                <li><a href="#"><i class="fa-solid fa-book"></i> &nbsp; Loans</a><br></li>
 
-            <li><a href="#"><i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations</a><br></li>
+                <li><a href="#"><i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations</a><br></li>
 
-            <li><a href="#"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines</a><br></li>
+                <li><a href="#"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines</a><br></li>
 
-            <li><a href="{{ url_for('transactions') }}"><i class="fa-solid fa-credit-card"></i> &nbsp; Transactions</a><br></li>
+                <li><a href="{{ url_for('transactions') }}"><i class="fa-solid fa-credit-card"></i> &nbsp; Transactions</a><br></li>
 
-            <li><a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> &nbsp; Logout</a><br></li>
-        </ul>
-    </nav>
+                <li><a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> &nbsp; Logout</a><br></li>
+            </ul>
+        </nav>
 
-    <div class="container">
-        {% block content %}
-        {% endblock %}
+        <main class = "content">
+            <div class="container">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
     </div>
 </body>
 </html>
