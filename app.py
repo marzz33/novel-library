@@ -6,6 +6,7 @@ from sqlalchemy import inspect
 import os
 from extensions import db, bcrypt 
 from models.users import Member, User 
+from models.users import Member,User, Admin
 
 app = Flask(__name__)
 
@@ -46,8 +47,17 @@ def login():
     if request.method == "POST":
         email = request.form['email']
         password = request.form['password']
-        # Handle Login logic here .....
-        pass
+        # Handle Login logic here ..... DONE BY ME(Caleb)
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for ('profile'))
+        
+        
+        return "Invalid email or password"
+
     return render_template('login.html')
 
 @app.route("/signup", methods = ["POST", "GET"])
@@ -61,6 +71,12 @@ def signup():
         
         hashed_pw = bcrypt.generate_password_hash(password)
         
+        existing_user = User.query.filter_by(email=email).first()
+        
+        if existing_user:
+            return "Email already exists. Try logging in"
+
+    
         new_user = Member(name=name , email = email , password_hash = password)
         
         db.session.add(new_user)
@@ -86,6 +102,44 @@ def profile():
         current_user.update_profile(name=name, email=email, phone=phone)
         return redirect(url_for('profile'))
     return render_template('profile.html', user = current_user)
+
+        #Created by Me (Caleb Dotson)
+
+@app.route('/create-admin')
+def create_admin():
+    admin = Admin(
+        name = "Admin",
+        email= "admin@test.com",
+        password_hash ="1234"
+
+    )
+    
+    db.session.add(admin)
+    db.session.commit()
+
+    return "Admin created"
+
+@app.route('/admin')
+@login_required
+def admin_page():
+    if not current_user.is_admin():
+        return "Access denied" , 403
+        
+    return "Welcome, Admin"
+    
+@app.route('/promote/<user_id>')
+@login_required
+def promote(user_id):
+        if not current_user.is_admin():
+
+            return "Access denied" , 403 
+
+        current_user.promote_to_admin(user_id)
+        return "User promoted"
+
+
+
+
 
 if __name__ == '__main__':
     with app.app_context():
