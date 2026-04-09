@@ -50,10 +50,6 @@ class User(UserMixin, db.Model):
             'polymorphic_identity': UserRole.MEMBER
         }
 
-    def is_admin(self):
-        return self.role == UserRole.Admin
-        
-
     def __init__(self, user_id: str, name: str, email: str,
                  password_hash: str, phone: str | None = None):
         self.user_id       = str(uuid.uuid4())
