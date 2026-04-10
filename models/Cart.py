@@ -53,6 +53,8 @@ class Cart(db.Model):
     self.user_id = user_id
     self.created_on = utcnow()
 
+  # This function allows users to add items to their cart, it will check if the item exists
+  # and if it is already in the cart before adding it
   def add_item(self, item_id):
     from models.Items import Item
 
@@ -69,4 +71,27 @@ class Cart(db.Model):
     db.session.commit()
     return cart_item
   
+  # This function allows users to remove items from their cart, it will check if the item
+  # exists in the cart before attempting to remove it
+  def remove_item(self, cart_item_id):
+    cart_item = CartItems.query.filter_by(cart_item_id = cart_item_id, cart_id = self.cart_id).first()
+    if not cart_item:
+      raise ValueError("Cart item not found.")
+    
+    db.session.delete(cart_item)
+    db.session.commit()
+    return True
+
+  # This function allows users to clear their cart, it will delete all items associated with the cart_id
+  def clear_cart(self):
+    CartItems.query.filter_by(cart_id = self.cart_id).delete()
+    db.session.commit()
+    return True
   
+  # This function allows users to view the items in their cart, it will return a list of CartItems associated with the cart_id
+  def view_cart(self):
+    return CartItems.query.filter_by(cart_id = self.cart_id).all()
+  
+  # This function returns the number of items in the cart, it will count the number of CartItems associated with the cart_id
+  def items_count(self):
+    return CartItems.query.filter_by(cart_id = self.cart_id).count()
