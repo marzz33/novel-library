@@ -21,14 +21,15 @@ class Item(db.Model):
 
     __tablename__ = "Items"
 
-    id                  = db.Column(db.Integer, primary_key=True)
-    item_id             = db.Column(db.String(36), unique=True, nullable=False)
-    title               = db.Column(db.String(200), nullable=False)
-    description         = db.Column(db.String(300), nullable=True)
-    qty                 = db.Column(db.Integer, nullable=False)
-    available_qty       = db.Column(db.Integer, nullable=False)
-    added_on            = db.Column(db.DateTime, default=utcnow)
-    item_type           = db.Column(db.String(20), nullable=False)
+    id                  = db.Column(db.Integer, primary_key = True)
+    item_id             = db.Column(db.String(36), unique = True, nullable = False)
+    title               = db.Column(db.String(200), nullable = False)
+    description         = db.Column(db.String(300), nullable = True)
+    qty                 = db.Column(db.Integer, nullable = False)
+    available_qty       = db.Column(db.Integer, nullable = False)
+    added_on            = db.Column(db.DateTime, default = utcnow)
+    item_type           = db.Column(db.String(20), nullable = False)
+    loan_days           = 14
 
     __mapper_args__ = {
         'polymorphic_on': item_type,
@@ -53,8 +54,8 @@ class Item(db.Model):
     def is_renewable(self) -> bool:
         return False
     
-    def get_type(self):
-        return self.item_type
+    def get_due_date(self):
+       return utcnow() + timedelta(days=self.loan_days)
     
     # Returns item details as a dictionary, used in routes to send data back as JSON
     def get_details(self):
@@ -125,17 +126,10 @@ class Book(Item):
         self.publisher = publisher
         self.genre = genre
         self.edition = edition
-
-    # Get the type of item, used in routes to determine which subclass it is when returning details as JSON
-    def get_type(self):
-        return "Book"
     
     # Overrides the base is_renewable method to allow books to be renewable, can add specific rules here if needed (e.g. max renewals, holds, etc.)
     def is_renewable(self):
         return True
-    
-    def get_due_date(self):
-        return utcnow() + timedelta(days=self.loan_days)
     
     def get_details(self):
         details = super().get_details()
@@ -172,15 +166,9 @@ class Movie(Item):
         self.rating = rating
         self.release_year = release_year
         self.director = director
-
-    def get_type(self):
-        return "Movie"
     
     def is_renewable(self):
         return True
-    
-    def get_due_date(self):
-        return utcnow() + timedelta(days = self.loan_days)
 
     def get_details(self):
         details = super().get_details()
@@ -209,13 +197,19 @@ class Computer(Item):
     __mapper_args__ = {
         'polymorphic_identity': 'Computer'
     }
+    
+    def __init__(self, title: str, qty: int, serial_number: str,
+                 os: str, condition: Condition, brand: str | None = None,
+                 specs: str | None = None, description: str | None = None,
+                 last_maintenance: datetime | None = None):
+        super().__init__(title, description, qty, 'Computer')
+        self.serial_number = serial_number
+        self.os = os
+        self.condition = condition
+        self.brand = brand
+        self.specs = specs
+        self.last_maintenance = last_maintenance
 
-    def get_type(self):
-        return "Computer"
-    
-    def get_due_date(self):
-        return utcnow() + timedelta(days = self.loan_days)
-    
     def is_renewable(self):
         return False
     
