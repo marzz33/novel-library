@@ -108,5 +108,12 @@ def admin_promote_user(user_id):
     current_user.promote_to_admin(user_id)
     return redirect(url_for('admin_users'))
 
+@app.route('/admin')
+@login_required
+def admin():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    return render_template('admin-layout.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
