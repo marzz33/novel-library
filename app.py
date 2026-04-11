@@ -86,5 +86,19 @@ def admin_items():
         items = Item.query.all()
     return render_template('admin-items.html', items=items)
 
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    q = request.args.get('q', '')
+    if q:
+        users = User.query.filter(
+            db.or_(User.name.ilike(f'%{q}%'), User.email.ilike(f'%{q}%'))
+        ).all()
+    else:
+        users = User.query.all()
+    return render_template('admin-users.html', users=users)
+
 if __name__ == '__main__':
     app.run(debug=True)
