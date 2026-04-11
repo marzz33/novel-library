@@ -24,7 +24,7 @@ class Transaction(db.Model):
 
     id                   = db.Column(db.Integer, primary_key=True)
     transaction_id       = db.Column(db.String(45), unique=True, nullable=False)
-    user_id              = db.Column(db.String(45), db.ForeignKey("Users.user_id"), nullable=False)
+    user_id              = db.Column(db.String(45), db.ForeignKey("users.user_id"), nullable=False)
     item_id              = db.Column(db.String(45), db.ForeignKey("Items.item_id"), nullable=False)
     transaction_type     = db.Column(db.Enum(TransactionType), nullable=False)
     

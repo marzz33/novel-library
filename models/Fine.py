@@ -18,7 +18,7 @@ class Fine(db.Model):
     id                   = db.Column(db.Integer, primary_key=True)
     fine_id              = db.Column(db.String(45), unique=True, nullable=False)
     transaction_id       = db.Column(db.String(45), db.ForeignKey("Transactions.transaction_id"), nullable=False)
-    user_id              = db.Column(db.String(45), db.ForeignKey("Users.user_id"), nullable=False)
+    user_id              = db.Column(db.String(45), db.ForeignKey("users.user_id"), nullable=False)
     amount               = db.Column(db.Float, nullable=False)
     issued_on            = db.Column(db.DateTime, default=utcnow)
     status               = db.Column(db.Enum(FineStatus), nullable=False, default=FineStatus.UNPAID)
