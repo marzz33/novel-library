@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin, current_user
@@ -73,6 +73,18 @@ def profile():
 @login_required
 def transactions():
     return render_template('transactions.html', user = current_user)
+
+@app.route('/admin/items')
+@login_required
+def admin_items():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    q = request.args.get('q', '')
+    if q:
+        items = Item.query.filter(Item.title.ilike(f'%{q}%')).all()
+    else:
+        items = Item.query.all()
+    return render_template('admin-items.html', items=items)
 
 if __name__ == '__main__':
     app.run(debug=True)
