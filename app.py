@@ -100,5 +100,13 @@ def admin_users():
         users = User.query.all()
     return render_template('admin-users.html', users=users)
 
+@app.route('/admin/users/<user_id>/promote', methods=['POST'])
+@login_required
+def admin_promote_user(user_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    current_user.promote_to_admin(user_id)
+    return redirect(url_for('admin_users'))
+
 if __name__ == '__main__':
     app.run(debug=True)
