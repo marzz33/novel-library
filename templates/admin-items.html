@@ -1,0 +1,83 @@
+{% extends "admin-layout.html" %}
+
+{% block title %}Manage Items{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2 class="page-title">Items</h2>
+
+</div>
+
+<!------ Search bar -->
+<form method="GET" action="{{ url_for('admin_items') }}">
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input
+            type="text"
+            name="q"
+            placeholder="Search by title, author, ISBN..."
+            value="{{ request.args.get('q', '') }}">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+<!----- items cards ------>
+<div class="card">
+    {% if items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Author / Director</th>
+                <th>Copies</th>
+                <th>Available</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.item_type }}</td>
+                <td>
+                    {% if item.author is defined %}
+                        {{ item.author }}
+                    {% elif item.director is defined %}
+                        {{ item.director }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.available_qty }}</td>
+                <td>
+                    {% if item.available_qty > 0 %}
+                        <span class="badge available">Available</span>
+                    {% elif item.available_qty == 0 %}
+                        <span class="badge loaned">Fully Loaned</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="#" class="action-btn edit">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </a>
+                    <a href="#" class="action-btn delete">
+                        <i class="fa-solid fa-trash"></i> Remove
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fa-solid fa-box-open"></i>
+        No items found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -115,5 +115,14 @@ def admin():
         abort(403)
     return render_template('admin-layout.html')
 
+@app.route('/search')
+def search():
+    q = request.args.get('q', '')
+    if q:
+        items = Item.query.filter(Item.title.ilike(f'%{q}%')).all()
+    else:
+        items = []
+    return render_template('search-results.html', items=items, q=q)
+
 if __name__ == '__main__':
     app.run(debug=True)
