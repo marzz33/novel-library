@@ -29,6 +29,8 @@ def books():
     all_books = Book.query.all()
     return render_template('books.html', books=all_books) 
 
+# login, signup, and logout section -------------------
+
 @app.route('/login', methods = ["POST", "GET"])
 def login():
     if request.method == "POST":
@@ -58,6 +60,8 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+# user profile section -------------------
+
 @app.route('/profile', methods = ["POST", "GET"])
 @login_required
 def profile():
@@ -69,10 +73,71 @@ def profile():
         return redirect(url_for('profile'))
     return render_template('profile.html', user = current_user)
 
+# transaction section -------------------
+
 @app.route('/transactions')
 @login_required
 def transactions():
     return render_template('transactions.html', user = current_user)
+
+# cart section -------------------
+
+@app.route('/cart')
+def view_cart():
+    cart = current_user.cart
+    items = cart.view_cart() if cart else []
+    total = cart.items_count() if cart else 0
+    return render_template('cart.html', user = current_user, items = items, total = total)
+
+@app.route('/cart/add/<item_id>')
+def add_to_cart(item_id):
+    item = Item.query.filter_by(item_id=item_id).first()
+    if not current_user.cart:
+        cart = Cart(user_id=current_user.user_id)
+        db.session.add(cart)
+        db.session.commit()
+    current_user.cart.add_item(item_id)
+    return redirect(url_for('view_cart'))
+
+@app.route('/cart/remove/<item_id>')
+def remove_from_cart(cart_item_id):
+    cart = current_user.cart
+    cart.remove_item(cart_item_id)
+    return redirect(url_for('view_cart'))
+
+@app.route('/cart/clear', methods = ["POST"])
+def clear_cart():
+    cart = current_user.cart
+    if cart:
+        cart.clear_cart()
+    return redirect(url_for('view_cart'))
+
+@app.route('/cart/checkout', methods = ["POST"])
+def checkout_cart():
+    cart = current_user.cart
+    
+    if not cart:
+        return redirect(url_for('view_cart'))
+
+    items = cart.view_cart()
+
+    for cart_item in items:
+        if not cart_item.item:
+            continue
+        existing = Reservation.query.filter_by(
+            user_id=current_user.user_id, 
+            item_id=cart_item.item_id
+        ).filter(
+            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.READY])
+        ).first()
+
+        if not existing:
+            cart_item.item.reserve(current_user.user_id)
+
+    cart.clear_cart()
+    return render_template('cart-checkout.html')
+
+# admin section -------------------
 
 @app.route('/admin/items')
 @login_required
@@ -114,6 +179,8 @@ def admin():
     if current_user.get_role().value != 'Admin':
         abort(403)
     return render_template('admin-layout.html')
+
+# search section -------------------
 
 @app.route('/search')
 def search():
