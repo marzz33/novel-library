@@ -95,3 +95,87 @@ class Cart(db.Model):
   # This function returns the number of items in the cart, it will count the number of CartItems associated with the cart_id
   def items_count(self):
     return CartItems.query.filter_by(cart_id = self.cart_id).count()
+
+  # Validates EVERY item in the cart before loaning ANY of them.
+    # If any item fails validation (unavailable, over loan limit, unpaid fines),
+    # the whole checkout is rejected and nothing is loaned.
+  def checkout(self):
+      from models.Items import Item
+      from models.users import Member
+
+      member = Member.query.filter_by(user_id=self.user_id).first()
+      if not member:
+          raise ValueError("Member not found.")
+
+  # Block checkout entirely if the member has any unpaid fines
+      if member.has_unpaid_fines():
+          raise ValueError("You have unpaid fines. Please resolve them before checking out.")
+
+      cart_lines = self.view_cart()
+      if not cart_lines:
+        raise ValueError("Your cart is empty.")
+      
+      # PHASE 1 — Validate every item upfront. Build a list of (item, cart_line)
+      # tuples so PHASE 2 doesn't have to re-query anything.
+      validated = []
+      # Track running totals as we validate, so multiple items in one cart
+      # are checked against the limit cumulatively (not just against the DB state).
+      from models.Transaction import Transaction, TransactionType, TransactionStatus
+
+      current_loans = Transaction.query.filter(Transaction.user_id == self.user_id,        # type: ignore
+            Transaction.transaction_type == TransactionType.LOAN,           # type: ignore
+            db.or_(
+              Transaction.status == TransactionStatus.ACTIVE,
+              Transaction.status == TransactionStatus.OVERDUE
+            )
+      ).count()
+
+      current_computers = Transaction.query.filter(Transaction.user_id == self.user_id,                            # type: ignore
+          Transaction.transaction_type == TransactionType.LOAN,           # type: ignore
+          Transaction.item_type == "Computer",                            # type: ignore
+          db.or_(
+              Transaction.status == TransactionStatus.ACTIVE,
+              Transaction.status == TransactionStatus.OVERDUE
+          )
+      ).count()
+
+      for line in cart_lines:
+          item = Item.query.filter_by(item_id = line.item_id).first()
+          if not item:
+              raise ValueError(f"An item in your cart no longer exists. Please remove it and try again.")
+
+          if not item.check_availability():
+            raise ValueError(f"'{item.title}' is no longer available. Please remove it or reserve it instead.")
+
+      # Cumulative loan limit check
+          if current_loans + 1 > member.max_loanable_items:
+            raise ValueError(f"Checking out would exceed your loan limit of {member.max_loanable_items} items.")
+
+          if item.item_type == "Computer":
+            if current_computers + 1 > member.max_loanable_computers:
+              raise ValueError(f"Checking out would exceed your computer loan limit of {member.max_loanable_computers}.")
+            current_computers += 1
+
+          current_loans += 1
+          validated.append((item, line))
+
+      # PHASE 2 — All checks passed. Loan everything and clear the cart.
+      transactions = []
+      for item, line in validated:
+        txn = item.loan(self.user_id)
+        transactions.append(txn)
+
+      self.clear_cart()
+      return transactions
+
+    # Static helper: get a member's cart, creating it if it doesn't exist yet.
+    # Use this in routes instead of querying Cart directly so members never
+    # hit a "no cart found" error on their first add.
+  @staticmethod
+  def get_or_create(user_id: str):
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+      cart = Cart(user_id=user_id)
+      db.session.add(cart)
+      db.session.commit()
+    return cart
