@@ -55,7 +55,7 @@ def signup():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        member = Member(name=name, email=email, password_hash = password)
+        member = Member(name=name, email=email, password = password)
         db.session.add(member)
         db.session.commit()
         login_user(member)
