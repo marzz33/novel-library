@@ -163,14 +163,20 @@ class Cart(db.Model):
       transactions = []
       reservations = []
 
-      for item in to_loan:
-        success = item.loan_item(self.user_id)
-        transactions.append(success)
+      try:
+        for item in to_loan:
+          success = item.loan(self.user_id)
+          transactions.append(success)
 
-      for item in to_reserve:
-        success = item.reserve_item(self.user_id)
-        reservations.append(success)
-
+        for item in to_reserve:
+          success = item.reserve(self.user_id)
+          reservations.append(success)
+      except Exception:
+        # If any unexpected error occurs during processing (e.g. database error), we want to roll back the entire transaction to prevent partial checkouts
+        db.session.rollback()
+        raise ValueError("An error occurred during checkout. Please try again.")
+      
+      db.session.commit()
       self.clear_cart()
       return transactions, reservations
 
