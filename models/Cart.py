@@ -34,7 +34,7 @@ class CartItems(db.Model):
   
 class Cart(db.Model):
 
-  __tablename__ = 'Cart'
+  __tablename__ = 'Carts'
 
   id = db.Column(db.Integer, primary_key = True)
   cart_id = db.Column(db.String(80), unique = True, nullable = False)
