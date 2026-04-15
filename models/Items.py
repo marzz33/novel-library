@@ -85,7 +85,6 @@ class Item(db.Model):
             item_type=self.item_type
         )
         db.session.add(transaction)
-        db.session.commit()
         return transaction
     
     def reserve(self, user_id: str):
@@ -97,7 +96,6 @@ class Item(db.Model):
             item_id = self.item_id
         )
         db.session.add(reservation)
-        db.session.commit()
         return reservation
     
 class Book(Item):
