@@ -232,13 +232,20 @@ class Admin(User):
         reservation.mark_ready()
         return True
     
-    def manage_user_status(self, user_id: str, new_status: MemberStatus):
-        user = User.query.all()
+    def manage_user_status(self, user_id, new_status: MemberStatus):
+        if not isinstance(new_status, MemberStatus):
+            raise ValueError("Invalid status. Status must be either 'Active' or 'Suspended'.")
+        
+        user = User.query.filter_by(user_id = user_id).first()
         if not user:
             raise ValueError("User not found. Make sure the user ID is correct.")
         
-        if new_status not in MemberStatus:
-            raise ValueError("Invalid status. Status must be either 'Active' or 'Suspended'.")
+        if user.role != UserRole.MEMBER:
+            raise ValueError("Only members can have their status managed.")
+        
+        user.status = new_status
+        db.session.commit()
+        return True
         
     def get_role(self):
         return UserRole.ADMIN
