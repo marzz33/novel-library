@@ -50,8 +50,11 @@ def signup():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        # Handle signup logic here .....
-        pass
+        member = Member(name=name, email=email, password_hash = password)
+        db.session.add(member)
+        db.session.commit()
+        login_user(member)
+        return redirect(url_for('index'))
     return render_template('signup.html')
 
 @app.route('/logout')
@@ -83,59 +86,46 @@ def transactions():
 # cart section -------------------
 
 @app.route('/cart')
+@login_required
 def view_cart():
-    cart = current_user.cart
-    items = cart.view_cart() if cart else []
-    total = cart.items_count() if cart else 0
+    cart = Cart.get_or_create(current_user.user_id)
+    items = cart.view_cart()
+    total = cart.item_count()
     return render_template('cart.html', user = current_user, items = items, total = total)
 
-@app.route('/cart/add/<item_id>')
+@app.route('/cart/add/<item_id>', methods = ["POST"])
+@login_required
 def add_to_cart(item_id):
-    item = Item.query.filter_by(item_id=item_id).first()
-    if not current_user.cart:
-        cart = Cart(user_id=current_user.user_id)
-        db.session.add(cart)
-        db.session.commit()
-    current_user.cart.add_item(item_id)
+    cart = Cart.get_or_create(current_user.user_id)
+    cart.add_item(item_id)
     return redirect(url_for('view_cart'))
 
 @app.route('/cart/remove/<item_id>')
+@login_required
 def remove_from_cart(cart_item_id):
-    cart = current_user.cart
+    cart = Cart.get_or_create(current_user.user_id)
     cart.remove_item(cart_item_id)
     return redirect(url_for('view_cart'))
 
 @app.route('/cart/clear', methods = ["POST"])
+@login_required
 def clear_cart():
-    cart = current_user.cart
-    if cart:
-        cart.clear_cart()
+    cart = Cart.get_or_create(current_user.user_id)
+    cart.clear_cart()
     return redirect(url_for('view_cart'))
 
 @app.route('/cart/checkout', methods = ["POST"])
+@login_required
 def checkout_cart():
-    cart = current_user.cart
+    cart = Cart.get_or_create(current_user.user_id)
     
-    if not cart:
-        return redirect(url_for('view_cart'))
-
-    items = cart.view_cart()
-
-    for cart_item in items:
-        if not cart_item.item:
-            continue
-        existing = Reservation.query.filter_by(
-            user_id=current_user.user_id, 
-            item_id=cart_item.item_id
-        ).filter(
-            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.READY])
-        ).first()
-
-        if not existing:
-            cart_item.item.reserve(current_user.user_id)
-
-    cart.clear_cart()
-    return render_template('cart-checkout.html')
+    try:
+        transactions, reservations = cart.checkout()
+        return render_template('checkout-success.html', transactions = transactions, reservations = reservations)
+    except ValueError as e:
+        items = cart.view_cart()
+        total = cart.item_count()
+        return render_template('cart.html', user = current_user, items = items, total = total, error = str(e))
 
 # admin section -------------------
 
