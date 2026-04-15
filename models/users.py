@@ -39,7 +39,7 @@ class User(UserMixin, db.Model):
     
     # Added due to SQLAlchemy error
     # Keeps member from trying to add additional columns instead of inheriting from the User class
-    memeber_since = db.Column(db.DateTime, nullable=  True)
+    member_since = db.Column(db.DateTime, nullable=  True)
     max_loanable_items = db.Column(db.Integer, nullable = True, default=4)
     max_loanable_computers = db.Column(db.Integer, nullable = True, default=1)
     
@@ -96,7 +96,7 @@ class Member(User):
     def __init__(self, name, email, password, phone= None):
         super().__init__(user_id = str(uuid.uuid4()), name = name, email = email, password = password, phone = phone)
         self.role = UserRole.MEMBER
-        self.memeber_since = utcnow()
+        self.member_since = utcnow()
         self.status = MemberStatus.ACTIVE
 
     def check_loan_limits(self, item) -> bool:
