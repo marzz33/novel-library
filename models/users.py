@@ -113,7 +113,7 @@ class Member(User):
         if active_loans >= self.max_loanable_items:
             return False
         
-        if item.get_type() == "Computer":
+        if item.item_type == "Computer":
 
             # Count active computer loans for the user
             active_computers = Transaction.query.filter(Transaction.user_id == self.user_id,    # type: ignore
