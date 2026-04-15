@@ -60,6 +60,8 @@ class Reservation(db.Model):
         from models.Notifications import notify_reservation_ready
         from models.Items import Item
 
+        # This decrements the available quantity of the item when it becomes ready for pickup,
+        # since it is now reserved for this member and unavailable to others.
         item = Item.query.filter_by(item_id = self.item_id).first()
         if item and item.available_qty > 0:
             item.available_qty -= 1
@@ -105,10 +107,21 @@ class Reservation(db.Model):
     def cancel(self):
         if self.status == ReservationStatus.EXPIRED:
             raise ValueError("Unable to cancel. Reservation has expired.")
-        elif self.status == ReservationStatus.CANCELLED:
+        if self.status == ReservationStatus.CANCELLED:
             raise ValueError("Reservation is already cancelled.")
-        else:
-            self.status = ReservationStatus.CANCELLED
+        
+        now_ready = self.status == ReservationStatus.READY
+        self.status = ReservationStatus.CANCELLED
+
+
+        # If a reservation that was ready for pickup is cancelled, we increase the available quantity
+        # of the item and notify the next person in line since an item just became available
+        if now_ready:
+            from models.Items import Item
+
+            held_item = Item.query.filter_by(item_id=self.item_id).first()
+            if held_item is not None:
+                held_item.available_qty += 1
 
         # Shift everyone behind this position up by 1
         # filter_by() is used to get only reservations for a specific item
@@ -143,6 +156,12 @@ class Reservation(db.Model):
                 and self.ready_by < utcnow()):
 
             self.status = ReservationStatus.EXPIRED
+
+            # If member didn't pick up in time, we want to increase the available quantity of the item and notify the next person in line
+            from models.Items import Item
+            item = Item.query.filter_by(item_id=self.item_id).first()
+            if item is not None:
+                item.available_qty += 1
 
             # Shift everyone behind this position up by 1
             queue = Reservation.query.filter_by(
