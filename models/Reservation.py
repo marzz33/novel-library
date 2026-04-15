@@ -89,18 +89,16 @@ class Reservation(db.Model):
         if item is None:
             raise ValueError("Item no longer exists.")
 
-        item.available_qty -= 1
-
-        txn = Transaction(
+        new = Transaction(
             user_id          = self.user_id,
             item_id          = self.item_id,
             transaction_type = TransactionType.LOAN,
             item_type        = item.item_type
         )
         self.status = ReservationStatus.CONFIRMED
-        db.session.add(txn)
+        db.session.add(new)
         db.session.commit()
-        return txn
+        return new
 
     # Called when the member cancels their spot in the queue/reservation.
     # Reorders the queue and notifies the next person if item is available
