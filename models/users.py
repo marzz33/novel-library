@@ -43,7 +43,7 @@ class User(UserMixin, db.Model):
     max_loanable_items = db.Column(db.Integer, nullable = True, default=4)
     max_loanable_computers = db.Column(db.Integer, nullable = True, default=1)
     
-    Permissions     = db.Column(db.JSON, nullable=True)
+    permissions     = db.Column(db.JSON, nullable=True)
 
     __mapper_args__ = {
             'polymorphic_on':       role,
@@ -51,11 +51,11 @@ class User(UserMixin, db.Model):
         }
 
     def __init__(self, user_id: str, name: str, email: str,
-                 password_hash: str, phone: str | None = None):
-        self.user_id       = str(uuid.uuid4())
+                 password: str, phone: str | None = None):
+        self.user_id       = user_id
         self.name          = name
         self.email         = email
-        self.password      = bcrypt.generate_password_hash(password_hash).decode("utf-8")
+        self.password      = bcrypt.generate_password_hash(password).decode("utf-8")
         self.phone         = phone
         self.added_on      = utcnow()
 
@@ -93,8 +93,8 @@ class Member(User):
         'polymorphic_identity': UserRole.MEMBER
     }
 
-    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
-        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
+    def __init__(self, name, email, password, phone= None):
+        super().__init__(user_id = str(uuid.uuid4()), name = name, email = email, password = password, phone = phone)
         self.role = UserRole.MEMBER
         self.memeber_since = utcnow()
         self.status = MemberStatus.ACTIVE
@@ -195,8 +195,8 @@ class Admin(User):
         'polymorphic_identity': UserRole.ADMIN
     }
 
-    def __init__(self, name: str, email: str, password_hash: str, phone: str | None = None):
-        super().__init__(user_id=str(uuid.uuid4()), name=name, email=email, password_hash=password_hash, phone=phone)
+    def __init__(self, name, email, password, phone=None):
+        super().__init__(user_id=str(uuid.uuid4()), name = name, email = email, password = password, phone = phone)
         self.role = UserRole.ADMIN
         self.permissions = []
 
