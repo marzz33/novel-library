@@ -116,15 +116,21 @@ class Transaction(db.Model):
         db.session.add(fine)
         db.session.commit()
 
-    # This method checks if a transaction is overdue, if it is it will update the status to overdue and return true, 
-    # otherwise it will return false
+    # This method checks if a transaction is overdue based on the current date and the due date, it also checks if the transaction is still active
     def is_overdue(self):
-        if self.status == TransactionStatus.ACTIVE and self.due_date is not None and self.due_date < utcnow():
-            self.status = TransactionStatus.OVERDUE
-            db.session.commit()
-            self.create_fine()
-            return True
-        return False
+        return (self.status in (TransactionStatus.ACTIVE, TransactionStatus.OVERDUE) and self.due_date is not None and self.due_date < utcnow())
+    
+    # This method marks a transaction as overdue if it is past the due date, it will also create a fine for the overdue transaction
+    def mark_overdue(self): 
+        if self.status != TransactionStatus.ACTIVE:
+            return False
+        if not self.is_overdue():
+            return False
+        
+        self .status = TransactionStatus.OVERDUE
+        db.session.commit()
+        self.create_fine()
+        return True
     
     def renew(self):
         if self.status != TransactionStatus.ACTIVE:
@@ -143,7 +149,13 @@ class Transaction(db.Model):
         if not Reservation.is_empty(self.item_id):
             raise ValueError("Cannot renew Item. There are pending reservations for this item.")
 
-        self.due_date = item.get_due_date() if item else utcnow() + timedelta(days = 7)
+        # Extends the due date by the original loan period of the item, if item is not found it defaults to 7 days
+        # This allows users to not use the remainding loan period if they renew early,
+        # but also allows them to use the remainding loan period if they renew late but before it becomes overdue
+        loan_days = item.loan_days if item else 7
+        base = self.due_date if self.due_date and self.due_date > utcnow() else utcnow()
+        self.due_date = base + timedelta(days = loan_days)
+
         self.transaction_type = TransactionType.RENEWED
         self.renewed_count += 1
         db.session.commit()
