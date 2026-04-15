@@ -58,6 +58,12 @@ class Reservation(db.Model):
     # Gives members 3 days to pick up their reserved item before the reservation expires
     def mark_ready(self):
         from models.Notifications import notify_reservation_ready
+        from models.Items import Item
+
+        item = Item.query.filter_by(item_id = self.item_id).first()
+        if item and item.available_qty > 0:
+            item.available_qty -= 1
+
         self.status   = ReservationStatus.READY
         self.ready_by = utcnow() + timedelta(days=3)
         db.session.commit()
