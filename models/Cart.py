@@ -38,7 +38,7 @@ class Cart(db.Model):
 
   id = db.Column(db.Integer, primary_key = True)
   cart_id = db.Column(db.String(80), unique = True, nullable = False)
-  user_id = db.Column(db.String(80), db.ForeignKey('Users.user_id'), nullable = False)
+  user_id = db.Column(db.String(80), db.ForeignKey('users.user_id'), nullable = False)
   created_on = db.Column(db.DateTime, default = utcnow)
 
   # This relationship allows us to easily access the user associated with this cart, as well as the items in the cart.
