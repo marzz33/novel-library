@@ -1,15 +1,18 @@
 from flask import Flask, render_template, url_for, request, redirect, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from extensions import db, bcrypt 
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin, current_user
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '2c66c136b4b1add76daaf728a84546294f6c6ee2230594b8'
-bcrypt = Bcrypt(app)
+# bcrypt = Bcrypt(app)
+bcrypt.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.db'
-db = SQLAlchemy(app)
+# db = SQLAlchemy(app)
+db.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
