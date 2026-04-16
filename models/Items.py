@@ -156,8 +156,8 @@ class Movie(Item):
         'polymorphic_identity': 'Movie'
     }
 
-    def __init__(self, title: str, qty: int, format: MovieFormat, genre: str | None, rating: str | None,
-                release_year: int | None, director: str | None, description: str | None):
+    def __init__(self, title: str, qty: int, format: MovieFormat, director: str, genre: str | None = None, rating: str | None = None,
+                release_year: int | None = None, description: str | None = None):
         super().__init__(title, description, qty, 'Movie')
         self.format = format
         self.genre = genre
@@ -196,11 +196,11 @@ class Computer(Item):
         'polymorphic_identity': 'Computer'
     }
     
-    def __init__(self, title: str, qty: int, serial_number: str,
+    def __init__(self, title: str, serial_number: str,
                  os: str, condition: Condition, brand: str | None = None,
                  specs: str | None = None, description: str | None = None,
                  last_maintenance: datetime | None = None):
-        super().__init__(title, description, qty, 'Computer')
+        super().__init__(title, description, qty=1, item_type='Computer')
         self.serial_number = serial_number
         self.os = os
         self.condition = condition
