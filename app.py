@@ -186,6 +186,8 @@ def search():
         items = []
     return render_template('search-results.html', items=items, q=q)
 
+
+# add book button ------------
 @app.route('/admin/items/add', methods=['POST'])
 @login_required
 def admin_add_book():
