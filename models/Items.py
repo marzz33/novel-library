@@ -29,6 +29,7 @@ class Item(db.Model):
     available_qty       = db.Column(db.Integer, nullable = False)
     added_on            = db.Column(db.DateTime, default = utcnow)
     item_type           = db.Column(db.String(20), nullable = False)
+    image_url           = db.Column(db.String(500), nullable = True)
     loan_days           = 14
 
     __mapper_args__ = {
@@ -36,7 +37,7 @@ class Item(db.Model):
         'polymorphic_identity': 'item'
     }
 
-    def __init__(self, title: str, description: str | None, qty: int, item_type: str):
+    def __init__(self, title: str, description: str | None, qty: int, item_type: str, image_url: str | None = None):
         self.item_id       = str(uuid.uuid4())
         self.title         = title
         self.description   = description
@@ -44,6 +45,7 @@ class Item(db.Model):
         self.available_qty = qty
         self.added_on      = utcnow()
         self.item_type     = item_type
+        self.image_url     = image_url
 
     # Returns boolean indicating if the item is currently available for loan (available_qty > 0)
     def check_availability(self) -> bool:
@@ -117,8 +119,8 @@ class Book(Item):
     # super() is used to call the __init__ method of the parent Item class to set common attributes,
     # then sets book-specific attributes like isbn, author, etc.
     def __init__(self, title: str, qty: int, author: str, isbn: str | None, publisher: str | None,
-                 genre: str | None, edition: str | None, description: str | None):
-        super().__init__(title, description, qty, 'Book')
+                 genre: str | None, edition: str | None, description: str | None, image_url: str | None = None):
+        super().__init__(title, description, qty, 'Book', image_url=image_url)
         self.author = author
         self.isbn = isbn
         self.publisher = publisher

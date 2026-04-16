@@ -44,7 +44,10 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for('index'))
+            if user.get_role(). value == 'Admin':
+                return redirect(url_for('admin'))
+            else:
+                return redirect(url_for('index'))
         else:
             return render_template('login.html', error="Invalid email or password")
     return render_template('login.html')
@@ -185,6 +188,43 @@ def search():
     else:
         items = []
     return render_template('search-results.html', items=items, q=q)
+
+
+# add book button ------------
+@app.route('/admin/items/add', methods=['POST'])
+@login_required
+def admin_add_book():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    title = request.form.get('title')
+    author = request.form.get('author')
+    qty = int(request.form.get('qty'))
+    isbn = request.form.get('isbn')
+    publisher = request.form.get('publisher')
+    genre = request.form.get('genre')
+    edition = request.form.get('edition')
+    description = request.form.get('description')
+    image_url = request.form.get('image_url')
+
+    book = Book(title=title, author=author, qty=qty, isbn=isbn,
+                publisher=publisher, genre=genre, edition=edition,
+                description=description, image_url=image_url)
+    db.session.add(book)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
+
+# remove item button @app.route('/admin/items/remove/<item_id>', methods=['POST'])
+@app.route('/admin/items/remove/<item_id>', methods=['POST'])
+@login_required
+def admin_remove_item(item_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    item = Item.query.filter_by(item_id=item_id).first()
+    if not item:
+        abort(404)
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
 
 if __name__ == '__main__':
     with app.app_context():
