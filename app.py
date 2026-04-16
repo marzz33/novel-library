@@ -44,7 +44,10 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for('index'))
+            if user.get_role(). value == 'Admin':
+                return redirect(url_for('admin'))
+            else:
+                return redirect(url_for('index'))
         else:
             return render_template('login.html', error="Invalid email or password")
     return render_template('login.html')
