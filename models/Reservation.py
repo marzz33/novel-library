@@ -235,12 +235,15 @@ class Reservation(db.Model):
     def is_empty(item_id: str) -> bool:
 
         # Returns True if no one is waiting for this item(no reservations in PENDING or READY status), False if there are active reservations.
-        # Will be used in Transaction file when Transaction.completed() is called after a return.
+        # Will be used in Transaction file when Transaction.completed() is called after a return to check if we need to notify the next person in line.
+        # Also blocks reservations from being made if there are already active reservations in the queue, since we don't want people jumping to the front of the line after an item becomes available.
 
         return Reservation.query.filter_by(
-            item_id=item_id,
-            status=ReservationStatus.PENDING
-        ).count() == 0
+            item_id = item_id
+        ).filter( db.or_(
+            Reservation.status == ReservationStatus.PENDING,
+            Reservation.status == ReservationStatus.READY
+        )).count() == 0
 
     # Returns reservation details as a dictionary
     # Used in routes to send data back as JSON
