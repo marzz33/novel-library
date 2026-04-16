@@ -17,9 +17,12 @@ You need pip
     
  5. download requirements from txt file:
           pip install -r requirements.txt
+
+ 6. if running for the first time, populate the inventory by running:
+        python seed.py
     
- 6. run the app:
+ 7. after package is initialized and seed is loaded, run the app:
           python app.py
           
- 7. open app in browser by searching for:
+ 8. open app in browser by searching for:
           http://localhost:5000/
