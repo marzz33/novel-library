@@ -212,6 +212,19 @@ def admin_add_book():
     db.session.commit()
     return redirect(url_for('admin_items'))
 
+# remove item button @app.route('/admin/items/remove/<item_id>', methods=['POST'])
+@app.route('/admin/items/remove/<item_id>', methods=['POST'])
+@login_required
+def admin_remove_item(item_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    item = Item.query.filter_by(item_id=item_id).first()
+    if not item:
+        abort(404)
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
