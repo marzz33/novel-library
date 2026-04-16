@@ -2,8 +2,6 @@ from app import db
 from enum import Enum
 from datetime import datetime, timezone, timedelta
 import uuid
-from models.Items import Item
-
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -36,6 +34,8 @@ class Transaction(db.Model):
     due_date             = db.Column(db.DateTime, nullable=True)
     returned_date        = db.Column(db.DateTime, nullable=True)
     status               = db.Column(db.Enum(TransactionStatus), nullable=False, default=TransactionStatus.ACTIVE)
+    renewed_count        = db.Column(db.Integer, default = 0, nullable = False)
+    max_renewals         = 1
 
     # Added these relationships to allow for easier access to user and item details when viewing transactions,
     # it will also allow for easier querying of transactions by user or item in the future if needed
@@ -49,7 +49,7 @@ class Transaction(db.Model):
         self.item_id             = item_id
         self.transaction_type    = transaction_type
         self.item_type           = item_type
-        self.date                 = utcnow()
+        self.date                = utcnow()
 
         # This allows a transaction to close itself if it is a return transaction,
         # otherwise it will set the due date based on the item type
@@ -61,24 +61,27 @@ class Transaction(db.Model):
             self.returned_date = None
             self.status = TransactionStatus.ACTIVE
 
-        # This sets the due date based on the item type,
-        # it will be used for both loan and renewed transactions
-            if item_type == "Book":
-                self.due_date = self.date + timedelta(days=28)
-            elif item_type == "Movie":
-                self.due_date = self.date + timedelta(days=7)
-            else:
-                self.due_date = self.date + timedelta(days=140)
+            from models.Items import Item
+
+            item = Item.query.filter_by(item_id = item_id).first()
+            self.due_date = item.get_due_date() if item else utcnow() + timedelta(days = 7)
 
     # This method marks a transaction as completed when a return transaction is created,
     # it will also update the returned date and increase the available quantity of the item in inventory
     def completed(self):
 
         from models.Reservation import Reservation
+        from models.Fine import Fine, FineStatus
+        from models.Items import Item
 
         self.status = TransactionStatus.COMPLETED
         self.returned_date = utcnow()
-        item = Item.query.filter_by(item_id=self.item_id).first()
+
+        fine = Fine.query.filter_by(transaction_id = self.transaction_id).first()
+        if fine and fine.status == FineStatus.UNPAID:
+            fine.amount = fine.calculate_fine()
+
+        item = Item.query.filter_by(item_id = self.item_id).first()
         if item:
             item.available_qty += 1
 
@@ -101,10 +104,13 @@ class Transaction(db.Model):
         rate = 10.0 if self.item_type == "Computer" else 1.0
         amount = round(rate * overdue_days, 2)
 
+        # In the event an item is removed from inventory after a transaction is created, we still want to
+        # create a fine with basic details instead of erroring out due to missing item details
+        item_title = self.item.title if self.item else f"Item {self.item_id}"
         fine = Fine(
             user_id = self.user_id,
             transaction_id = self.transaction_id,
-            reason = f"Overdue {self.item_type}: {self.item.title if self.item else self.item_id or 'Unknown Item. Contact Admin for further assistance.'}",
+            reason = f"Overdue {self.item_type}: {item_title}",
             amount = amount
         )
         db.session.add(fine)
@@ -123,19 +129,23 @@ class Transaction(db.Model):
     def renew(self):
         if self.status != TransactionStatus.ACTIVE:
             raise ValueError("Only active transactions can be renewed.")
+        
+        if self.renewed_count >= self.max_renewals:
+            raise ValueError("Maximum number of renewals reached (1).")
+
+        from models.Items import Item
 
         item = Item.query.filter_by(item_id = self.item_id).first()
         if item and not item.is_renewable():
             raise ValueError(f"{item.title} is not eligible for renewal.")
-
-        if self.item_type == "Book":
-            self.due_date = utcnow() + timedelta(days=28)
-        elif self.item_type == "Movie":
-            self.due_date = utcnow() + timedelta(days=7)
-        else:
-            self.due_date = utcnow() + timedelta(days=140)
         
+        from models.Reservation import Reservation
+        if not Reservation.is_empty(self.item_id):
+            raise ValueError("Cannot renew Item. There are pending reservations for this item.")
+
+        self.due_date = item.get_due_date() if item else utcnow() + timedelta(days = 7)
         self.transaction_type = TransactionType.RENEWED
+        self.renewed_count += 1
         db.session.commit()
 
     def get_summary(self):

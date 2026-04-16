@@ -169,9 +169,9 @@ class Reservation(db.Model):
         # Called automatically when an item is returned or a reservation expires.
 
         next_in_queue = Reservation.query.filter_by(
-            item_id=item_id,
-            status=ReservationStatus.PENDING
-        ).order_by(db.desc(Reservation.position)).first()
+            item_id = item_id,
+            status = ReservationStatus.PENDING
+        ).order_by(db.asc(Reservation.position)).first()
 
         if next_in_queue:
             next_in_queue.mark_ready()
@@ -189,7 +189,7 @@ class Reservation(db.Model):
                 Reservation.status == ReservationStatus.PENDING,
                 Reservation.status == ReservationStatus.READY
             )
-        ).order_by(db.desc(Reservation.position)).all()
+        ).order_by(db.asc(Reservation.position)).all()
 
     @staticmethod
     def get_position(item_id: str, user_id: str) -> int:

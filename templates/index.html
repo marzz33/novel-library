@@ -320,6 +320,11 @@
                 </ul>
 
                 <div>
+                    <div class = "profile-icon">
+                        <a href = "{{url_for('view_cart')}}">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </a>
+                    </div>
                     {% if current_user.is_authenticated %}
                         <div class = "profile-icon">
                             <a href = "{{url_for('profile')}}">

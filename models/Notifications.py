@@ -18,7 +18,7 @@ class Notification(db.Model):
 
     id                   = db.Column(db.Integer, primary_key=True)
     notification_id      = db.Column(db.String(45), unique=True, nullable=False)
-    user_id              = db.Column(db.String(45), db.ForeignKey("Users.user_id"), nullable=False)
+    user_id              = db.Column(db.String(45), db.ForeignKey("users.user_id"), nullable=False)
     type                 = db.Column(db.Enum(NotificationType), nullable=False)
     message              = db.Column(db.String(320), nullable=False)
     sent_on              = db.Column(db.DateTime, default=utcnow)

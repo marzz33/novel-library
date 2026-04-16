@@ -73,7 +73,7 @@ class Fine(db.Model):
     def calculate_fine(self):
 
         transaction = self.transaction
-        if transaction is None and transaction.due_date is None:
+        if transaction is None or transaction.due_date is None:
             return 0.0
         
         overdue_days = (utcnow() - transaction.due_date).days
