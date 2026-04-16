@@ -213,6 +213,7 @@ def admin_add_book():
     return redirect(url_for('admin_items'))
 
 # remove item button @app.route('/admin/items/remove/<item_id>', methods=['POST'])
+@app.route('/admin/items/remove/<item_id>', methods=['POST'])
 @login_required
 def admin_remove_item(item_id):
     if current_user.get_role().value != 'Admin':
