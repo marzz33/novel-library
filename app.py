@@ -124,5 +124,26 @@ def search():
         items = []
     return render_template('search-results.html', items=items, q=q)
 
+@app.route('/admin/items/add', methods=['POST'])
+@login_required
+def admin_add_book():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    title = request.form.get('title')
+    author = request.form.get('author')
+    qty = int(request.form.get('qty'))
+    isbn = request.form.get('isbn')
+    publisher = request.form.get('publisher')
+    genre = request.form.get('genre')
+    edition = request.form.get('edition')
+    description = request.form.get('description')
+
+    book = Book(title=title, author=author, qty=qty, isbn=isbn,
+                publisher=publisher, genre=genre, edition=edition,
+                description=description)
+    db.session.add(book)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
+
 if __name__ == '__main__':
     app.run(debug=True)
