@@ -204,10 +204,11 @@ def admin_add_book():
     genre = request.form.get('genre')
     edition = request.form.get('edition')
     description = request.form.get('description')
+    image_url = request.form.get('image_url')
 
     book = Book(title=title, author=author, qty=qty, isbn=isbn,
                 publisher=publisher, genre=genre, edition=edition,
-                description=description)
+                description=description, image_url=image_url)
     db.session.add(book)
     db.session.commit()
     return redirect(url_for('admin_items'))
