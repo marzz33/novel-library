@@ -20,7 +20,7 @@ class UserRole(Enum):
 
 class MemberStatus(Enum):
     ACTIVE = "Active"
-    INACTIVE = "Suspended"
+    SUSPENDED = "Suspended"
 
 # Abstract Base Class for Users
 class User(UserMixin, db.Model):
@@ -103,8 +103,11 @@ class Member(User):
         from models.Transaction import Transaction, TransactionType, TransactionStatus
 
         # Count active loans for the user
-        active_loans = Transaction.query.filter(Transaction.user_id == self.user_id,    # type: ignore
-                                                Transaction.transaction_type == TransactionType.LOAN,   # type: ignore
+        active_loans = Transaction.query.filter(Transaction.user_id == self.user_id,   # type: ignore
+                                                db.or_(
+                                                    Transaction.transaction_type == TransactionType.LOAN,   # type: ignore
+                                                    Transaction.transaction_type == TransactionType.RENEWED
+                                                ),
                                                 db.or_(
                                                     Transaction.status == TransactionStatus.ACTIVE,
                                                     Transaction.status == TransactionStatus.OVERDUE
@@ -117,7 +120,10 @@ class Member(User):
 
             # Count active computer loans for the user
             active_computers = Transaction.query.filter(Transaction.user_id == self.user_id,    # type: ignore
+                                                        db.or_(
                                                         Transaction.transaction_type == TransactionType.LOAN,   # type: ignore
+                                                        Transaction.transaction_type == TransactionType.RENEWED
+                                                        ),
                                                         Transaction.item_type == "Computer",                 # type: ignore
                                                         db.or_(
                                                             Transaction.status == TransactionStatus.ACTIVE,
@@ -130,8 +136,14 @@ class Member(User):
         return True
     
     def loan_items(self, item):
+        if self.status == MemberStatus.SUSPENDED:
+            raise ValueError("Your account is currently suspended. Please contact an Admin for more information.")
+        
+        if self.has_unpaid_fines():
+            raise ValueError("You have unpaid fines. Please pay your fines before being able to checkout more items.")
+
         if not self.check_loan_limits(item):
-            raise Exception("Loan limit reached. Please return some items before being able to checkout more.")
+            raise ValueError("Loan limit reached. Please return some items before being able to checkout more.")
         return item.loan(self.user_id)
     
     def reserve_items(self, item_id: str):
@@ -207,6 +219,7 @@ class Admin(User):
         
         user.role = UserRole.ADMIN
         db.session.commit()
+        db.session.expire(user)
     
     def demote_to_member(self, user_id: str):
         user = User.query.filter_by(user_id = user_id).first()
@@ -214,7 +227,13 @@ class Admin(User):
             raise ValueError("User not found. Make sure the User ID is correct.")
         
         user.role = UserRole.MEMBER
+        if user.member_since is None:
+            user.member_since = utcnow()
+        if user.status is None:
+            user.status = MemberStatus.ACTIVE
+
         db.session.commit()
+        db.session.expire(user)
 
     def waive_fine(self, fine_id: str):
         fine = Fine.query.filter_by(fine_id = fine_id).first()
