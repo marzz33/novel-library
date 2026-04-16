@@ -74,6 +74,11 @@ class Transaction(db.Model):
         from models.Fine import Fine, FineStatus
         from models.Items import Item
 
+        # This adds a guard and avoids having a transaction be marked completed multiple
+        # times which could lead to inventory issues with available quantity not being updated correctly
+        if self.status == TransactionStatus.COMPLETED:
+            raise ValueError("Transaction is already completed.")
+
         self.status = TransactionStatus.COMPLETED
         self.returned_date = utcnow()
 
@@ -156,7 +161,6 @@ class Transaction(db.Model):
         base = self.due_date if self.due_date and self.due_date > utcnow() else utcnow()
         self.due_date = base + timedelta(days = loan_days)
 
-        self.transaction_type = TransactionType.RENEWED
         self.renewed_count += 1
         db.session.commit()
 
