@@ -6,7 +6,9 @@
 
 <div class="page-header">
     <h2 class="page-title">Items</h2>
-
+    <button class="action-btn edit" onclick="document.getElementById('addBookModal').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> &nbsp; Add Book
+    </button>
 </div>
 
 <!------ Search bar -->
@@ -78,6 +80,63 @@
         No items found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.
     </div>
     {% endif %}
+</div>
+
+<!-- Add Book Modal -->
+<div id="addBookModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:500px; max-height:80vh; overflow-y:auto; position:relative;">
+        
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">Add Book</h2>
+
+        <form method="POST" action="{{ url_for('admin_add_book') }}">
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Title *</label>
+                <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Author *</label>
+                <input type="text" name="author" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Quantity *</label>
+                <input type="number" name="qty" min="1" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">ISBN</label>
+                <input type="text" name="isbn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Publisher</label>
+                <input type="text" name="publisher" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Genre</label>
+                <input type="text" name="genre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Edition</label>
+                <input type="text" name="edition" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Description</label>
+                <textarea name="description" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="action-btn edit" style="flex:1; padding:10px;">Add Book</button>
+                <button type="button" class="action-btn delete" style="flex:1; padding:10px;" onclick="document.getElementById('addBookModal').style.display='none'">Cancel</button>
+            </div>
+
+        </form>
+    </div>
 </div>
 
 {% endblock %}
