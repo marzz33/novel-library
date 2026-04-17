@@ -120,7 +120,32 @@
     </div>
 
     <h1>Checkout Successful!</h1>
-    <p></p>
+    <p>Thank you for your order!</p>
+    <br>
+
+    <div class = "summary-box">
+        <h2>Order Summary</h2>
+        <hr><br>
+
+        <h3>Loans</h3>
+        {% if transactions %}
+            {% for t in transactions %}
+                <p><strong>Title: </strong> {{ t.item.title if t.item else 'N/A' }} </p>
+            {% endfor %}
+        {% else %}
+            <p>No items loaned.</p>
+        {% endif %}
+
+        <br>
+        <h3>Reservations</h3>
+        {% if reservations %}
+            {% for r in reservations %}
+                <p><strong>Title: </strong> {{ r.item.title if r.item else 'N/A' }} </p>
+            {% endfor %}
+        {% else %}
+            <p>No items reserved.</p>
+        {% endif %}
+    </div>
 
     <a href="{{ url_for('index') }}" class="btn">Back to Home</a>
     <a href="{{ url_for('view_cart') }}" class="btn btn-outline">View Cart</a>
