@@ -87,6 +87,8 @@
     .btn-remove {
         padding: 8px 12px;
         color: var(--brown);
+        background: transparent;
+        border: none;
     }
 
     .btn-remove:hover {
@@ -146,9 +148,28 @@
         transition: 0.3s ease;
     }
 
+    .clear-cart-btn {
+        place-items: center;
+        text-transform: uppercase;
+        border: none;
+        border-radius: var(--border-radius-m);
+        text-decoration: none;
+        display: inline-block;
+        padding: 12px 60px;
+        background: #c96b6b;
+        color: white;
+        letter-spacing: 1.5px;
+    }
+
+    .clear-cart-btn:hover {
+        background-color: #b65f5f;
+        transition: 0.3s ease;
+    }
+
     .checkout-wrapper {
         display: flex;
         justify-content: center;
+        margin-bottom: 20px;
     }
 
     .store-icon {
@@ -193,7 +214,7 @@
             <tr>
                 <th>Title</th>
                 <th>By</th>
-                <th>Item Type</th>
+                <th>Type</th>
                 <th></th>
             </tr>
         </thead>
@@ -203,30 +224,21 @@
             <tr>
                 <td>
                     <div class = "item-img">
-                        <img src = "{{cart_item.item.image_url if cart_item.item and cart_item.item.image_url 
-                                      else 'https://via.placeholder.com/50'}}">
+                        <!-- <img src = "{{cart_item.item.image_url if cart_item.item and cart_item.item.image_url 
+                                      else 'https://via.placeholder.com/50'}}"> -->
                         <div>
-                            {{ cart_item.item.title if cart_item.item else "Unknown Item" }}
+                            {{ cart_item.item.title if cart_item.item and cart_item.item.title else "N/A" }}
                         </div>
                     </div>
                 </td>
 
                 <td>
-                    {% if cart_item.item %}
-
-                        {% if cart_item.item.item_type == "Book" %}
-                            {{cart_item.item.author}}
-
-                        {% elif cart_item.item.item_type == "Movie" %}
-                            {{cart_item.item.director}}
-
-                        {% elif cart_item.item.item_type == "Computer" %}
-                            {{cart_item.item.brand}}
-
-                        {% else %}
-                            N/A
-                        {% endif %}
-
+                    {% if cart_item.item.item_type == 'Book' %}
+                        {{ cart_item.item.author }}
+                    {% elif cart_item.item.item_type == 'Movie' %}
+                        {{ cart_item.item.director }}
+                    {% elif cart_item.item.item_type == 'Computer' %}
+                        {{ cart_item.item.brand }}
                     {% else %}
                         N/A
                     {% endif %}
@@ -237,9 +249,11 @@
                 </td>
 
                 <td>
-                    <a class="btn-remove"
-                       href="{{ url_for('remove_from_cart', cart_item_id=cart_item.cart_item_id) }}">
-                    <i class="fa-solid fa-trash-can"></i></a>
+                    <form method="POST" action="{{ url_for('remove_from_cart', cart_item_id=cart_item.cart_item_id) }}">
+                        <button type="submit" class="btn-remove">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
@@ -268,7 +282,7 @@
 
     <div class = "description">
         <h3>Cart Summary</h3>
-        <p><strong>Total Items:</strong> {{ items|length }}</p>
+        <p><strong>Total Items:</strong> {{ total }}</p>
     </div>
 
         <div class = "checkout-wrapper">
@@ -279,7 +293,13 @@
             </form>
         </div>
 
-        <!-- need to insert a clear cart button -->
+        <div class = "checkout-wrapper">
+            <form method = "POST" action = "{{ url_for('clear_cart') }}">
+                <button type="submit" class="clear-cart-btn">
+                Clear Cart <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </form>
+        </div>
 
         <div class = "store-icon">
             <i class="fa-solid fa-gift"></i>
