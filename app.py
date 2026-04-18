@@ -128,7 +128,10 @@ def view_cart():
 @login_required
 def add_to_cart(item_id):
     cart = Cart.get_or_create(current_user.user_id)
-    cart.add_item(item_id)
+    try:
+        cart.add_item(item_id)
+    except ValueError:
+        pass
     return redirect(url_for('view_cart'))
 
 @app.route('/cart/remove/<cart_item_id>', methods = ["POST"])
