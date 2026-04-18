@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, abort
+from flask import Flask, render_template, url_for, request, redirect, abort, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from extensions import db, bcrypt 
@@ -130,9 +130,10 @@ def add_to_cart(item_id):
     cart = Cart.get_or_create(current_user.user_id)
     try:
         cart.add_item(item_id)
+        flash('Item added to cart!')
     except ValueError:
-        pass
-    return redirect(url_for('view_cart'))
+        flash('Item already in cart.')
+    return redirect(request.referrer or url_for('books'))
 
 @app.route('/cart/remove/<cart_item_id>', methods = ["POST"])
 @login_required

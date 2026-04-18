@@ -251,9 +251,27 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--green-dark); }
+
+        /*---- animation fadeout -------*/
+        @keyframes fadeout {
+            0%   { opacity: 1; transform: translateY(0); }
+            70%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+}
     </style>
 </head>
 <body>
+    <!-- notification !!-->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+            <div id="toast" style="position:fixed; top:20px; right:20px; background:#96a090; color:white; padding:12px 24px; border-radius:30px; font-family:'Neuton',serif; font-size:16px; z-index:9999; box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: fadeout 3s forwards;">
+                <i class="fa-solid fa-check"></i> &nbsp; {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="layout">
         <nav>
             <ul>
@@ -283,6 +301,11 @@
                 <li>
                     <a href="{{ url_for('index') }}">
                         <i class="fa-solid fa-house"></i> &nbsp; Home
+                    </a><br>
+                </li>
+                <li>
+                    <a href="{{ url_for('view_cart') }}">
+                        <i class="fa-solid fa-cart-shopping"></i> &nbsp; Cart
                     </a><br>
                 </li>
             </ul>
