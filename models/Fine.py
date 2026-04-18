@@ -76,7 +76,9 @@ class Fine(db.Model):
         if transaction is None or transaction.due_date is None:
             return 0.0
         
-        overdue_days = (utcnow() - transaction.due_date).days
+        # If the item has been returned, it stays calculating on the returned date, if not it calculates based on the current date
+        end_date = transaction.returned_date or utcnow()
+        overdue_days = (end_date - transaction.due_date).days
         if overdue_days <= 0:
             return 0.0
         

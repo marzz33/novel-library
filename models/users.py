@@ -46,8 +46,7 @@ class User(UserMixin, db.Model):
     permissions     = db.Column(db.JSON, nullable=True)
 
     __mapper_args__ = {
-            'polymorphic_on':       role,
-            'polymorphic_identity': UserRole.MEMBER
+            'polymorphic_on':       role
         }
 
     def __init__(self, user_id: str, name: str, email: str,

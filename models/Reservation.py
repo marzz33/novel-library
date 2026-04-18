@@ -148,12 +148,17 @@ class Reservation(db.Model):
         if item and item.check_availability():
             Reservation.notify_next(self.item_id)
 
-    # Checks if the 3 day pick up window has passed
-    # If it has, the queue is reordered and the next person is notified
+    # Checks if the 3 day pick up window has expired. Only checks
     def is_expired(self) -> bool:
-        if (self.status == ReservationStatus.READY
+        return (self.status == ReservationStatus.READY
                 and self.ready_by is not None
-                and self.ready_by < utcnow()):
+                and self.ready_by < utcnow())
+
+    # This function actually expires the reservation and is called when is_overdue() returns true, it
+    # will also increase the available quantity of the item and notify the next person in line if there is one.
+    def expire(self):
+            if self.status != ReservationStatus.READY:
+                return
 
             self.status = ReservationStatus.EXPIRED
 
@@ -179,8 +184,20 @@ class Reservation(db.Model):
 
             db.session.commit()
             Reservation.notify_next(self.item_id)
-            return True
-        return False
+
+    @ staticmethod
+    def expire_overdue_reservations(item_id: str | None = None):
+
+        #This is called in the route files when a reservation is loaded to check if any ready reservations are past their 3 day pickup window and expires them
+        # if a specific item_id is given it only checks reservations for that item
+        query = Reservation.query.filter_by(status=ReservationStatus.READY)
+        if item_id:
+            query = query.filter_by(item_id=item_id)
+
+        ready_reservations = query.all()
+        for reservation in ready_reservations:
+            if reservation.is_expired():
+                reservation.expire()
 
     # Static method works on the whole Reservations table without needing access to a specific reservation object.
     # It finds the next person in line for a specific item and marks their reservation as ready.

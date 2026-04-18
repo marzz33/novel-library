@@ -121,8 +121,8 @@ class Cart(db.Model):
       to_loan = []
       to_reserve = []
 
-      for list in cart_list:
-        item = Item.query.filter_by(item_id = list.item_id).first()
+      for cart_items in cart_list:
+        item = Item.query.filter_by(item_id = cart_items.item_id).first()
         if not item:
           raise ValueError(f"An item in your cart no longer exists. Please remove it and try again.")
         

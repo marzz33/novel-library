@@ -82,6 +82,12 @@ class Transaction(db.Model):
         self.status = TransactionStatus.COMPLETED
         self.returned_date = utcnow()
 
+        # Creates fine if the item returned did not already have one
+        if self.due_date and self.returned_date > self.due_date:
+            self.create_fine()
+
+        # This recalculates the fine amount in the event a user already has a fine from being marked overdue
+        # this amount will be final
         fine = Fine.query.filter_by(transaction_id = self.transaction_id).first()
         if fine and fine.status == FineStatus.UNPAID:
             fine.amount = fine.calculate_fine()
