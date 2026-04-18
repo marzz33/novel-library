@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from extensions import db, bcrypt 
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin, current_user
+from models import*
 
 app = Flask(__name__)
 
@@ -212,6 +213,52 @@ def admin_add_book():
     db.session.add(book)
     db.session.commit()
     return redirect(url_for('admin_items'))
+
+# add movie button ------------
+@app.route('/admin/items/add/movie', methods=['POST'])
+@login_required
+def admin_add_movie():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    title = request.form.get('title')
+    director = request.form.get('director')
+    format = MovieFormat(request.form.get('format'))
+    genre = request.form.get('genre')
+    rating = request.form.get('rating')
+    release_year = request.form.get('release_year')
+    qty = int(request.form.get('qty'))
+    description = request.form.get('description')
+    image_url = request.form.get('image_url')
+
+    movie = Movie(title=title, director=director, format=format, genre=genre,
+                  rating=rating, release_year=int(release_year) if release_year else None,
+                  qty=qty, description=description, image_url=image_url)
+    db.session.add(movie)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
+
+# add computer button ------------
+@app.route('/admin/items/add/computer', methods=['POST'])
+@login_required
+def admin_add_computer():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    title = request.form.get('title')
+    serial_number = request.form.get('serial_number')
+    os = request.form.get('os')
+    condition = Condition(request.form.get('condition'))
+    brand = request.form.get('brand')
+    specs = request.form.get('specs')
+    qty = int(request.form.get('qty'))
+    image_url = request.form.get('image_url')
+
+    computer = Computer(title=title, serial_number=serial_number, os=os,
+                        condition=condition, brand=brand, specs=specs,
+                        qty=qty, image_url=image_url)
+    db.session.add(computer)
+    db.session.commit()
+    return redirect(url_for('admin_items'))
+
 
 # remove item button @app.route('/admin/items/remove/<item_id>', methods=['POST'])
 @app.route('/admin/items/remove/<item_id>', methods=['POST'])
