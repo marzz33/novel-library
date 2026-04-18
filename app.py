@@ -32,8 +32,30 @@ def index():
 
 @app.route('/books')
 def books():
-    all_books = Book.query.all()
-    return render_template('books.html', books=all_books) 
+    q = request.args.get('q', '')
+    if q:
+        all_books = Book.query.filter(Book.title.ilike(f'%{q}%')).all()
+    else:
+        all_books = Book.query.all()
+    return render_template('books.html', books=all_books)
+
+@app.route('/movies')
+def movies():
+    q = request.args.get('q', '')
+    if q:
+        all_movies = Movie.query.filter(Movie.title.ilike(f'%{q}%')).all()
+    else:
+        all_movies = Movie.query.all()
+    return render_template('movies.html', movies=all_movies)
+
+@app.route('/computers')
+def computers():
+    q = request.args.get('q', '')
+    if q:
+        all_computers = Computer.query.filter(Computer.title.ilike(f'%{q}%')).all()
+    else:
+        all_computers = Computer.query.all()
+    return render_template('computers.html', computers=all_computers)
 
 # login, signup, and logout section -------------------
 
@@ -109,7 +131,7 @@ def add_to_cart(item_id):
     cart.add_item(item_id)
     return redirect(url_for('view_cart'))
 
-@app.route('/cart/remove/<item_id>')
+@app.route('/cart/remove/<cart_item_id>')
 @login_required
 def remove_from_cart(cart_item_id):
     cart = Cart.get_or_create(current_user.user_id)
