@@ -131,7 +131,7 @@ def add_to_cart(item_id):
     cart.add_item(item_id)
     return redirect(url_for('view_cart'))
 
-@app.route('/cart/remove/<cart_item_id>')
+@app.route('/cart/remove/<cart_item_id>', methods = ["POST"])
 @login_required
 def remove_from_cart(cart_item_id):
     cart = Cart.get_or_create(current_user.user_id)
