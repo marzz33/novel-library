@@ -112,7 +112,8 @@ def profile():
 @app.route('/transactions')
 @login_required
 def transactions():
-    return render_template('transactions.html', user = current_user)
+    transactions = Transaction.query.filter_by(user_id=current_user.user_id).order_by(Transaction.date.desc()).all()
+    return render_template('transactions.html', user = current_user, transactions = transactions)
 
 # cart section -------------------
 
