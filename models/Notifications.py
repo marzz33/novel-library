@@ -1,6 +1,6 @@
 from app import db
 from enum import Enum
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import uuid
 
 def utcnow():
