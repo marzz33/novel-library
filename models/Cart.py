@@ -101,7 +101,7 @@ class Cart(db.Model):
     # the whole checkout is rejected and nothing is loaned.
   def checkout(self):
       from models.Items import Item
-      from models.users import Member
+      from models.users import Member, MemberStatus
       from models.Transaction import Transaction, TransactionType, TransactionStatus
 
       member = Member.query.filter_by(user_id = self.user_id).first()
@@ -111,6 +111,9 @@ class Cart(db.Model):
   # Block checkout entirely if the member has any unpaid fines
       if member.has_unpaid_fines():
           raise ValueError("You have unpaid fines. Please resolve them before checking out.")
+      
+      if member.status == MemberStatus.SUSPENDED:
+          raise ValueError("Your account is currently suspended. Please contact an administrator for assistance.")
 
       cart_list = self.view_cart()
       if not cart_list:
@@ -134,7 +137,10 @@ class Cart(db.Model):
       # Check all items for availability and loan limits before processing any transactions
 
       current_loans = Transaction.query.filter(Transaction.user_id == self.user_id,        # type: ignore
-            Transaction.transaction_type == TransactionType.LOAN,           # type: ignore
+            db.or_(
+              Transaction.transaction_type == TransactionType.LOAN,
+              Transaction.transaction_type == TransactionType.RENEWED
+),        # type: ignore
             db.or_(
               Transaction.status == TransactionStatus.ACTIVE,
               Transaction.status == TransactionStatus.OVERDUE
@@ -171,6 +177,7 @@ class Cart(db.Model):
         for item in to_reserve:
           success = item.reserve(self.user_id)
           reservations.append(success)
+          
       except Exception:
         # If any unexpected error occurs during processing (e.g. database error), we want to roll back the entire transaction to prevent partial checkouts
         db.session.rollback()
