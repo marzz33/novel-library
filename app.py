@@ -81,7 +81,12 @@ def signup():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        member = Member(name=name, email=email, password = password)
+        
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return render_template('signup.html', error="An account with that email already exists.")
+        
+        member = Member(name=name, email=email, password=password)
         db.session.add(member)
         db.session.commit()
         login_user(member)
