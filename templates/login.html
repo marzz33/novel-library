@@ -4,24 +4,218 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Login</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                text-align: left;
+
+                background-color: #fffefc;
+                color:#5f4d43;
+                font-family: 'Neuton', serif;
+
+                display: flex;
+                justify-content: center;   /* horizontal center */
+                align-items: center;       /* vertical center */
+                height: 100vh; 
+            }
+
+            :root {
+            --green: #96a090;
+            --light-green: #c5d862;
+            --cream: #fffddd;
+            --brown: #9a7c69;
+            --pink: #ecb0a1;
+            --gray: #79796f;
+            --dark-cream: #c0bea8;
+            --white: #fffefc;
+            --light-pink: #fbe9e9;
+            --brown-2: #5f4d43;
+            --green-2: #838b7e;
+            --border-radius-s: 8px;
+            --border-radius-m: 30px;
+            --border-radius-circle: 50%;
+        }
+
+        .container {
+            display: grid;
+            width: 40%;
+            background: var(--white);
+            box-shadow: 0.5rem 0 1rem rgba(0,0,0,.1);
+            place-items: center;
+            padding: 40px;
+            border-radius: var(--border-radius-m);
+            text-align: center;
+            border: 4px solid var(--green);
+        }
+
+        form {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* title "Login" ----------------------------- */
+        .title {
+            font-size: 50px;
+            margin-bottom: 30px;
+            color: var(--green);
+        }
+
+        /* login button ----------------------------- */
+        .btn-login {
+            cursor: pointer;
+            background: none;
+            font-family: 'Neuton', serif;
+            color:#fff;
+            background-color: var(--green);
+            box-sizing: border-box;
+            border-radius: var(--border-radius-m);
+            border: 2px solid var(--green-2);
+            padding: 10px 50px;
+            margin-top: 50px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            align-self: center;
+            text-decoration: none;
+        }
+
+        .btn-login:hover {
+            color: #5f4d43;
+            transition: 0.3s ease;
+            background: transparent;
+        }
+
+        /* label: signup and password ----------------------------- */
+        label {
+            display: block;
+            text-align: left;
+            width: 100%;
+            letter-spacing: 1px;
+        }
+
+        /* email ----------------------------- */
+        input[type = "email"] {
+            width: 87%;
+            padding: 12px 20px;
+            border: 2px solid var(--green-2);
+            border-radius: var(--border-radius-m);
+            margin-top: 10px;
+            font-family: 'Neuton', serif;
+            letter-spacing: 1px;
+        }
+
+        /* password ----------------------------- */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 87%;
+            padding: 12px 20px;
+            border: 2px solid var(--green-2);
+            border-radius: var(--border-radius-m);
+            margin-top: 10px;
+            font-family: 'Neuton', serif;
+            letter-spacing: 1px;
+        }
+
+        .toggle-eye {
+            position: absolute;
+            right: 15px;
+            top: 60%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #79796f;
+        }
+
+        /* signup ----------------------------- */
+        .btn-signup {
+            margin-top: 30px;
+            text-decoration: none;
+            color: var(--green);
+            letter-spacing: 0.5px;
+        }
+
+        /* joker ----------------------------- */
+        .joker {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: -1;
+        }
+
+        .joker img {
+            display: flex;
+            position: relative;
+            margin: auto;
+            width: 250px;
+            left: 37%;
+        }
+
+        .line {
+            height: 5px;
+            background: var(--green);
+            width: 13rem;
+            margin-bottom: 30px;
+            place-self: center;
+        }
+        
+        </style>
     </head>
 
     <body>
-        <h1>Login</h1>
+        <div class = "container">
+            <h1 class = "title">Login</h1> 
+            <div class = "line"></div>
 
-        {% if error %}
-            <p style = "color: red;">{{ error }}</p>
-        {% endif %}
+            {% if error %}
+                <p style = "color: red;">{{ error }}</p>
+            {% endif %}
 
-        <form method = "POST" action = "{{url_for('login')}}">
-            <label for = "email">Email:</label>
-            <input type = "email" id = "email" name = "email" required><br>
+                <form method = "POST" action = "{{url_for('login')}}">
+                <label for = "email">Email:</label>
+                <input type = "email" id = "email" name = "email" required><br>
+                <br>
 
-            <label for = "password">Password:</label>
-            <input type = "password" id = "password" name = "password" required><br>
+                <label for = "password">Password:</label>
+                <div class="password-wrapper">
+                    <input type = "password" id = "password" name = "password" required>
+                    <i class = "fa-solid fa-eye toggle-eye" onclick = "togglePassword()"></i>
+                </div>
 
-            <button type = "submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href = "{{url_for('signup')}}">Sign Up</a></p>
+                <button type = "submit" class = "btn-login">Login</button>
+                </form>
+                
+        <p>Don't have an account? <a href = "{{url_for('signup')}}" class = "btn-signup">Sign Up</a></p>
+
+        <script>
+            function togglePassword() {
+                const password = document.getElementById("password");
+                const icon = document.querySelector(".toggle-eye");
+
+                if (password.type === "password") {
+                    password.type = "text";
+                    icon.classList.remove("fa-eye");
+                    icon.classList.add("fa-eye-slash");
+                } else {
+                    password.type = "password";
+                    icon.classList.remove("fa-eye-slash");
+                    icon.classList.add("fa-eye");
+                }
+            }
+        </script>
+        </div>
+
+        <div class = "joker">
+            <img src="https://pbs.twimg.com/media/HD_EVY7aUAAoFH3.jpg">
+        </div>
     </body>
 </html>
