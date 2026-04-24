@@ -107,21 +107,21 @@ class Reservation(db.Model):
     def cancel(self):
         if self.status == ReservationStatus.EXPIRED:
             raise ValueError("Unable to cancel. Reservation has expired.")
-        if self.status == ReservationStatus.CANCELLED:
+        elif self.status == ReservationStatus.CANCELLED:
             raise ValueError("Reservation is already cancelled.")
         
+        from models.Items import Item
+
+        item = Item.query.filter_by(item_id = self.item_id).first()
+
         now_ready = self.status == ReservationStatus.READY
         self.status = ReservationStatus.CANCELLED
 
 
         # If a reservation that was ready for pickup is cancelled, we increase the available quantity
         # of the item and notify the next person in line since an item just became available
-        if now_ready:
-            from models.Items import Item
-
-            held_item = Item.query.filter_by(item_id=self.item_id).first()
-            if held_item is not None:
-                held_item.available_qty += 1
+        if now_ready and item is not None:
+            item.available_qty += 1
 
         # Shift everyone behind this position up by 1
         # filter_by() is used to get only reservations for a specific item
@@ -143,8 +143,6 @@ class Reservation(db.Model):
         db.session.commit()
 
         # If item is available after cancellation, notify next in line
-        from models.Items import Item
-        item: Item | None = Item.query.filter_by(item_id=self.item_id).first()
         if item and item.check_availability():
             Reservation.notify_next(self.item_id)
 
@@ -157,20 +155,19 @@ class Reservation(db.Model):
     # This function actually expires the reservation and is called when is_overdue() returns true, it
     # will also increase the available quantity of the item and notify the next person in line if there is one.
     def expire(self):
-            if self.status != ReservationStatus.READY:
-                return
+        if self.status != ReservationStatus.READY:
+            return
 
-            self.status = ReservationStatus.EXPIRED
+        self.status = ReservationStatus.EXPIRED
 
-            # If member didn't pick up in time, we want to increase the available quantity of the item and notify the next person in line
-            from models.Items import Item
-            item = Item.query.filter_by(item_id=self.item_id).first()
-            if item is not None:
-                item.available_qty += 1
+        # If member didn't pick up in time, we want to increase the available quantity of the item and notify the next person in line
+        from models.Items import Item
+        item = Item.query.filter_by(item_id=self.item_id).first()
+        if item is not None:
+            item.available_qty += 1
 
-            # Shift everyone behind this position up by 1
-            queue = Reservation.query.filter_by(
-                item_id=self.item_id
+        # Shift everyone behind this position up by 1
+        queue = Reservation.query.filter_by(item_id=self.item_id
             ).filter(
                 db.or_(
                     Reservation.status == ReservationStatus.PENDING,
@@ -179,13 +176,13 @@ class Reservation(db.Model):
                 Reservation.position > self.position #type: ignore
             ).order_by(db.desc(Reservation.position)).all()
 
-            for entry in queue:
-                entry.position -= 1
+        for entry in queue:
+            entry.position -= 1
 
-            db.session.commit()
-            Reservation.notify_next(self.item_id)
+        db.session.commit()
+        Reservation.notify_next(self.item_id)
 
-    @ staticmethod
+    @staticmethod
     def expire_overdue_reservations(item_id: str | None = None):
 
         #This is called in the route files when a reservation is loaded to check if any ready reservations are past their 3 day pickup window and expires them

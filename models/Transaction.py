@@ -138,7 +138,7 @@ class Transaction(db.Model):
         if not self.is_overdue():
             return False
         
-        self .status = TransactionStatus.OVERDUE
+        self.status = TransactionStatus.OVERDUE
         db.session.commit()
         self.create_fine()
         return True

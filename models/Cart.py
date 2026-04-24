@@ -163,7 +163,8 @@ class Cart(db.Model):
         ).count()
 
         if current_computers + computer_count > member.max_loanable_computers:
-          raise ValueError(f"Checking out would exceed your computer loan limit of {member.max_loanable_computers} items." f"You currently have {current_computers} active computer loans.")
+          raise ValueError(f"Checking out would exceed your computer loan limit of {member.max_loanable_computers} items. "
+                           f"You currently have {current_computers} active computer loans.")
 
       # If we made it here, all items passed validation and we can proceed with checkout
       transactions = []
