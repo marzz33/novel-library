@@ -19,7 +19,7 @@ You need pip
           pip install -r requirements.txt
 
  6. To restart your database (new changes to the CSV fils) delete the database with:
-        rm instance/linrary.db
+        rm instance/library.db
 
  7. after package is initialized, run the app (if database is empty it will automatically upload the inventory during boot up):
           python app.py
