@@ -25,15 +25,15 @@
             <div class="card-title">{{ book.title }}</div>
             <div class="card-author">{{ book.author }}</div>
             {% if book.available_qty > 0 %}
-                <span class="card-badge available">Available</span>
-                <form method="POST" action="{{ url_for('add_to_cart', item_id=book.item_id) }}" style="margin-top:8px;">
-                    <button type="submit" style="width:100%; padding:6px; background:var(--green); color:white; border:none; border-radius:var(--border-radius-m); font-family:'Neuton',serif; font-size:13px; cursor:pointer;">
-                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                    </button>
-                </form>
+                <span class="card-badge available">Available ({{ book.available_qty }} of {{ book.qty }})</span>
             {% else %}
-                <span class="card-badge loaned">Unavailable</span>
+                <span class="card-badge loaned">Currently Loaned (0 of {{ book.qty }})</span>
             {% endif %}
+            <form method="POST" action="{{ url_for('add_to_cart', item_id=book.item_id) }}" style="margin-top:8px;">
+                <button type="submit" style="width:100%; padding:6px; background:var(--green); color:white; border:none; border-radius:var(--border-radius-m); font-family:'Neuton',serif; font-size:13px; cursor:pointer;">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </button>
+            </form>
         </div>
     </div>
     {% endfor %}
