@@ -1,0 +1,56 @@
+{% extends "profile-layout.html" %}
+
+{% block title %}My Reservations{% endblock %}
+
+{% block content %}
+<h2 class="title">My Reservations</h2>
+<br>
+
+{% if reservations %}
+<table class="t-table">
+    <thead>
+        <tr>
+            <th>Title</th>          <!-- title of the item -->
+            <th>Item Type</th>      <!-- item type -->
+            <th>Queue Position</th> <!-- shows the user's position in the reservation queue for that item -->
+            <th>Reserved On</th>    <!-- date of when the reservation was made -->
+            <th>Ready By</th>       <!-- date of when the item is expected to be ready for pickup -->
+            <th>Status</th>         <!-- shows status of the reservation that's pending, ready for pickup, completed or cancelled -->
+            <th>Actions</th>        <!-- button for cancelling the reservation if it's still pending or ready for pickup -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reservations %}
+        <tr>
+            <td>{{ r.item.title if r.item else 'N/A' }}</td>
+            <td>{{ r.item.item_type if r.item else 'N/A' }}</td>
+            <td>
+                {# Show position only while waiting; once the reservation is done, position is irrelevant #}
+                {% if r.status.value in ['Pending', 'Ready'] %}
+                    #{{ r.position }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>{{ r.reserved_on.strftime('%Y-%m-%d') if r.reserved_on else '--' }}</td>
+            <td>{{ r.ready_by.strftime('%Y-%m-%d') if r.ready_by else '--' }}</td>
+            <td>{{ r.status.value }}</td>
+            <td>
+                {% if r.status.value in ['Pending', 'Ready'] %}
+                    <form method="POST" action="{{ url_for('cancel_reservation', reservation_id=r.reservation_id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action danger">Cancel</button>
+                    </form>
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>You don't have any reservations.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+{% endblock %}
