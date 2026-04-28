@@ -18,15 +18,14 @@ You need pip
  5. download requirements from txt file:
           pip install -r requirements.txt
 
- 6. if running for the first time, populate the inventory by running:
-        python seed.py
-    
- 7. after package is initialized and seed is loaded, run the app:
+ 6. To restart your database (new changes to the CSV fils) delete the database with:
+        rm instance/linrary.db
+
+ 7. after package is initialized, run the app (if database is empty it will automatically upload the inventory during boot up):
           python app.py
           
  8. open app in browser by searching for:
-          http://localhost:5000/
-
+    http://localhost:5000/
 
 Instructions for setting up admin account
 
