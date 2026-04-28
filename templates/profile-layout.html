@@ -227,6 +227,35 @@
             font-weight: normal;
         }
 
+        /* ------------------- compact action button ! ------------------- */
+        .btn-action {
+            display: block;
+            width: 70px;
+            padding: 5px 12px;
+            background-color: var(--green);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius-m);
+            font-family: 'Neuton', serif;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 4px auto;
+        }
+
+        .btn-action:hover {
+            background-color: #838b7e;
+            transition: 0.3s ease;
+        }
+
+        .btn-action.danger {
+            background-color: var(--pink);
+        }
+
+        .btn-action.danger:hover {
+            background-color: #d49585;
+            transition: 0.3s ease;
+        }
+
 
     </style>
 </head>
@@ -239,9 +268,9 @@
 
                 <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> &nbsp; Account</a><br></li>
 
-                <li><a href="#"><i class="fa-solid fa-book"></i> &nbsp; Loans</a><br></li>
+                <li><a href="{{ url_for('loans') }}"><i class="fa-solid fa-book"></i> &nbsp; Loans</a><br></li>
 
-                <li><a href="#"><i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations</a><br></li>
+                <li><a href="{{ url_for('reservations') }}"><i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations</a><br></li>
 
                 <li><a href="#"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines</a><br></li>
 
