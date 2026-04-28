@@ -4,9 +4,7 @@ from models.Items import Book, Movie, Computer, MovieFormat, Condition
 from models.users import Admin
 
 
-with app.app_context():
-    db.create_all()
-
+def seed_data():
     # --- Books ---
     with open("data/books.csv", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -67,4 +65,10 @@ with app.app_context():
     print("Computers loaded.")
 
     db.session.commit()
-    print("Done.")
+    print("Inventory Completed.")
+
+# Allow running this file directly with `python seed.py`
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        seed_data()
