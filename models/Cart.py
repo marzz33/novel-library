@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 
 def utcnow():
-  return datetime.now(timezone.utc)
+    return datetime.utcnow()  # type: ignore[deprecated]
 
 class CartItems(db.Model):
 

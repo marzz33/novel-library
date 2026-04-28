@@ -3,8 +3,8 @@ from enum import Enum
 from app import db
 import uuid
 
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+def utcnow():
+    return datetime.utcnow()  # type: ignore[deprecated]
 
 class MovieFormat(Enum):
     VHS = "VHS"

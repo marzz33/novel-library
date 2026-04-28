@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import uuid
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.utcnow()  # type: ignore[deprecated]
 
 class NotificationType(Enum):
     DUE_SOON = "Due Soon"

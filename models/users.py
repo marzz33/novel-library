@@ -8,11 +8,8 @@ from models.Transaction import Transaction
 from models.Fine import Fine, FineStatus
 from models.Reservation import Reservation
 
-
-
-
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+def utcnow():
+    return datetime.utcnow()  # type: ignore[deprecated]
 
 class UserRole(Enum):
     MEMBER = "Member"
