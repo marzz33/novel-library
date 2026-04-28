@@ -1,0 +1,79 @@
+{% extends "browse-layout.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+
+{% if q %}
+    <h2 class="page-title">Search results for "{{ q }}"</h2>
+{% else %}
+    <h2 class="page-title">All Inventory</h2>
+{% endif %}
+
+{# Reuse the same search bar from books/movies/computers so users can refine #}
+<form method = "GET" action = "{{ url_for('search') }}">
+    <div class = "search-bar">
+        <i class = "fas fa-search"></i>
+        <input type="text" name = "q" placeholder = "Search by title..."
+               value="{{ q }}">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+{% if items %}
+<div class = "card-grid">
+    {% for item in items %}
+    <div class = "book-card">
+        <img src = "{{ item.image_url if item.image_url else 'https://placehold.co/180x240?text=No+Cover' }}"
+             alt = "{{ item.title }}">
+        <div class="card-info">
+            <div class="card-title">{{ item.title }}</div>
+
+            {# Secondary info per type #}
+            {% if item.item_type == 'Book' %}
+                <div class="card-author">{{ item.author }}</div>
+            {% elif item.item_type == 'Movie' %}
+                <div class="card-author">{{ item.director }}</div>
+            {% elif item.item_type == 'Computer' %}
+                <div class="card-author">{{ item.brand if item.brand else item.os }}</div>
+            {% endif %}
+
+            <div style="font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:1px; margin-top:2px;">
+                {{ item.item_type }}
+            </div>
+
+            {# Availability badge — different format per item type #}
+            {% if item.item_type == 'Computer' %}
+                {% if item.available_qty > 0 %}
+                    <span class="card-badge available">Available</span>
+                {% else %}
+                    <span class="card-badge loaned">Currently Loaned</span>
+                {% endif %}
+            {% else %}
+                {% if item.available_qty > 0 %}
+                    <span class="card-badge available">Available ({{ item.available_qty }} of {{ item.qty }})</span>
+                {% else %}
+                    <span class="card-badge loaned">Unavailable (0 of {{ item.qty }})</span>
+                {% endif %}
+            {% endif %}
+
+            {# Add to Cart button — appears for everything EXCEPT unavailable computers #}
+            {% if not (item.item_type == 'Computer' and item.available_qty == 0) %}
+                <form method="POST" action="{{ url_for('add_to_cart', item_id=item.item_id) }}" style="margin-top:8px;">
+                    <button type="submit" style="width:100%; padding:6px; background:var(--green); color:white; border:none; border-radius:var(--border-radius-m); font-family:'Neuton',serif; font-size:13px; cursor:pointer;">
+                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    No items found{% if q %} for "{{ q }}"{% endif %}.
+</div>
+{% endif %}
+
+{% endblock %}
