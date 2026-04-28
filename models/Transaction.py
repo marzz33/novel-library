@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.utcnow()  # type: ignore[deprecated]
 
 class TransactionType(Enum):
     LOAN = "Loan"
@@ -43,7 +43,7 @@ class Transaction(db.Model):
     user                 = db.relationship("User", backref="transactions")
     item                 = db.relationship("Item", backref="transactions")
 
-    def __init__(self, user_id: str, item_id: str, transaction_type: TransactionType, item_type: str):
+    def __init__(self, user_id: str, item_id: str, transaction_type: TransactionType, item_type: str, due_date: datetime | None = None):
         self.transaction_id      = str(uuid.uuid4())
         self.user_id             = user_id
         self.item_id             = item_id
@@ -61,10 +61,15 @@ class Transaction(db.Model):
             self.returned_date = None
             self.status = TransactionStatus.ACTIVE
 
-            from models.Items import Item
+            # This allows us to overwrite the due date if provided, this is useful for renewals to set a a new due date
+            if due_date is not None:
+                self.due_date = due_date
+            else:
 
-            item = Item.query.filter_by(item_id = item_id).first()
-            self.due_date = item.get_due_date() if item else utcnow() + timedelta(days = 7)
+                from models.Items import Item
+
+                item = Item.query.filter_by(item_id = item_id).first()
+                self.due_date = item.get_due_date() if item else utcnow() + timedelta(days = 7)
 
     # This method marks a transaction as completed when a return transaction is created,
     # it will also update the returned date and increase the available quantity of the item in inventory
@@ -161,14 +166,30 @@ class Transaction(db.Model):
             raise ValueError("Cannot renew Item. There are pending reservations for this item.")
 
         # Extends the due date by the original loan period of the item, if item is not found it defaults to 7 days
-        # This allows users to not use the remainding loan period if they renew early,
-        # but also allows them to use the remainding loan period if they renew late but before it becomes overdue
+        # This allows users to not use the remaining loan period if they renew early,
+        # but also allows them to use the remaining loan period if they renew late but before it becomes overdue
         loan_days = item.loan_days if item else 7
-        base = self.due_date if self.due_date and self.due_date > utcnow() else utcnow()
-        self.due_date = base + timedelta(days = loan_days)
+        base_day = self.due_date if self.due_date and self.due_date > utcnow() else utcnow()
+        new_due_date = base_day + timedelta(days = loan_days)
 
+        # Marks the current transaction as completed, this allows us to keep a history of all transactions including renewals without having to update the original (mutated)
+        self.status = TransactionStatus.COMPLETED
+        self.returned_date = utcnow()
         self.renewed_count += 1
+
+        # Creates a new transaction for the renewed item, this allows us to keep track of the new due date and any future renewals separately from the original transaction
+        new_transaction = Transaction(
+            user_id = self.user_id,
+            item_id = self.item_id,
+            transaction_type = TransactionType.RENEWED,
+            item_type = self.item_type
+        )
+        new_transaction.due_date = new_due_date
+        new_transaction.renewed_count = self.renewed_count
+
+        db.session.add(new_transaction)
         db.session.commit()
+        return new_transaction
 
     def get_summary(self):
         return {
