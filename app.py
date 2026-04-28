@@ -18,7 +18,7 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # type: ignore
-login_manager.login_message = 'Please log in to access the cart.'
+login_manager.login_message = 'Please log for access.'
 
 from models import*
 
@@ -215,12 +215,12 @@ def admin():
 
 @app.route('/search')
 def search():
-    q = request.args.get('q', '')
+    q = request.args.get('q', '').strip()
     if q:
         items = Item.query.filter(Item.title.ilike(f'%{q}%')).all()
     else:
-        items = []
-    return render_template('search-results.html', items=items, q=q)
+        items = Item.query.all()
+    return render_template('search-catalog.html', items = items, q = q)
 
 
 # add book button ------------
@@ -305,7 +305,69 @@ def admin_remove_item(item_id):
     db.session.commit()
     return redirect(url_for('admin_items'))
 
+# my loans section -------------------
+
+@app.route('/loans')
+@login_required
+def loans():
+    all_transactions = current_user.view_transactions()
+    # Active loans only — completed transactions live on transactions
+    active_loans = [act_tran for act_tran in all_transactions
+                    if act_tran.status.value in ('Active', 'Overdue')]
+    return render_template('loans.html', user = current_user, loans = active_loans)
+
+
+@app.route('/loans/<transaction_id>/return', methods=['POST'])
+@login_required
+def return_loan(transaction_id):
+    try:
+        current_user.return_items(transaction_id)
+    except ValueError:
+        pass
+    return redirect(url_for('loans'))
+
+
+@app.route('/loans/<transaction_id>/renew', methods=['POST'])
+@login_required
+def renew_loan(transaction_id):
+    try:
+        current_user.renew_loans(transaction_id)
+    except ValueError:
+        pass
+    return redirect(url_for('loans'))
+
+
+# reservations section -------------------
+
+@app.route('/reservations')
+@login_required
+def reservations():
+    # Clean up expired reservations before showing the page
+    from models.Reservation import Reservation
+    Reservation.expire_overdue_reservations()
+
+    user_reservations = current_user.view_reservations()
+    return render_template('reservations.html',
+                           user = current_user,
+                           reservations = user_reservations)
+
+
+@app.route('/reservations/<reservation_id>/cancel', methods = ['POST'])
+@login_required
+def cancel_reservation(reservation_id):
+    try:
+        current_user.cancel_reservation(reservation_id)
+    except ValueError:
+        pass
+    return redirect(url_for('reservations'))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Auto-seed if inventory is empty
+        from models.Items import Item
+        if Item.query.count() == 0:
+            from seed import seed_data
+            seed_data()
     app.run(debug=True)
+
