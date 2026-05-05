@@ -171,61 +171,8 @@
             background: #96a090;
         }
 
-        /* search bar ! ------------------- */
-        .container {
-            display: inline-block;
-            width: 600px;
-            margin-top: 100px;
-        }
-
-        form {
-            height: 55px;
-            display: flex;
-            border: 2px solid #5f4d43;
-            box-sizing: border-box;
-            background: #fff;
-            border-radius: var(--border-radius-m);
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        form button {
-            background: #96a090;
-            padding: 10px 40px;
-            border: none;
-            outline: none;
-            color: #fff;
-            letter-spacing: 1px;
-            cursor: pointer;
-            font-family: 'Neuton', serif;
-            font-size: 15px;
-        }
-
-        form button:hover {
-            color: white;
-        }
-
-        form input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-family: 'Neuton', serif;
-            font-size: 15px;
-            color: var(--brown);
-        }
-
-        form .fa-search {
-            align-self: center;
-            padding: 10px 20px;
-            color: var(--green);
-        }
-
-        /* welcome img of container ! */
-        .welcome {
-            width: 450px;
-            height: auto;
-            margin-top: -60px;
-            display: inline-block;
+        .title {
+            color: #5f4d43;
         }
 
         /* dropdown menu for browse ! ------------------- */
@@ -287,8 +234,8 @@
         <header>
             <!--library navigation-->
             <nav class = "navbar">
-
-                <h1>Novel. ☘︎ ݁˖</h1>
+                <!-- can press the title "novel" to go back to homepage -->
+                <h1><a href = "{{url_for('index')}}" class = "title">Novel. ☘︎ ݁˖</a></h1>
 
                 <!--navigation buttons-->
                 <ul class = "nav-menu">
@@ -343,24 +290,9 @@
 
             </nav>
         </header>
-        
-        <!-- welcome pic with search bar -->
-        <div class = "container">
-            <div class = "welcome">
-                <img src= "https://pbs.twimg.com/media/HEIhL-DaIAAz4Ax?format=jpg&name=large">
-            </div>
-                    <form method="GET" action="{{ url_for('search') }}">
-                        <i class = "fas fa-search"></i>
-                        <input 
-                            type = "text"
-                            name="q"
-                            placeholder = "What are you looking for?">
-                        <button type = "submit">Search</button>
-                    </form>
-                </div>
+
+        <p>okay so welcome to novel lol</p>
         
     </body>
-
-    </html>
 
     </html>

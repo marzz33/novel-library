@@ -30,6 +30,10 @@ def load_user(user_id):
 def index():
     return render_template('index.html')
 
+@app.route('/about')
+def about():
+    return render_template('about-us.html')
+
 @app.route('/books')
 def books():
     q = request.args.get('q', '')
