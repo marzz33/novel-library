@@ -256,6 +256,41 @@
             transition: 0.3s ease;
         }
 
+        /* for the pay button in the fines table */
+        .pay-btn {
+            display: block;
+            width: 60px;
+            padding: 5px 12px;
+            background-color: var(--green);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius-m);
+            font-family: 'Neuton', serif;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 4px auto;
+        }
+
+        .pay-btn:hover {
+            background-color: #838b7e;
+            transition: 0.3s ease;
+        }
+
+        /* ------------------- fine alert for unpaid fines ! ------------------- */
+        .fine-alert {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            margin-left: 8px;
+            margin-bottom: 2px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 12px;
+            border-radius: var(--border-radius-m);
+        }
 
     </style>
 </head>
@@ -272,7 +307,12 @@
 
                 <li><a href="{{ url_for('reservations') }}"><i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations</a><br></li>
 
-                <li><a href="#"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines</a><br></li>
+                {% set unpaid_fines = current_user.fines | selectattr('status.value', 'equalto', 'Unpaid') | list %}
+                <li><a href="{{ url_for('fines') }}"><i class="fa-solid fa-money-bill"></i> &nbsp; Fines
+                    {% if unpaid_fines | length > 0 %}
+                        <span class = "fine-alert"> ! </span>
+                    {% endif %}
+                </a><br></li>
 
                 <li><a href="{{ url_for('transactions') }}"><i class="fa-solid fa-credit-card"></i> &nbsp; Transactions</a><br></li>
 

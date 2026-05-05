@@ -365,6 +365,26 @@ def cancel_reservation(reservation_id):
         pass
     return redirect(url_for('reservations'))
 
+# fines section -------------------
+
+@app.route('/fines')
+@login_required
+def fines():
+    fines = (Fine.query.filter_by(user_id=current_user.user_id).order_by(Fine.issued_on.desc()).all())
+    return render_template('fines.html', user=current_user, fines=fines)
+
+@app.route('/fines/<fine_id>/pay', methods=['POST'])
+@login_required
+def pay_fine(fine_id):
+    fine = Fine.query.filter_by(fine_id=fine_id).first()
+    try:
+        fine.paid()
+    except ValueError:
+        pass
+    return redirect(url_for('fines'))
+
+# -------------------
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
