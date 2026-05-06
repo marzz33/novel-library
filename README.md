@@ -64,3 +64,44 @@ Instructions for setting up admin account
 
     email: admin@test.com
     password: password123
+
+Instructions to create/test fines through shell
+
+1. open shell/terminal
+
+    flask shell
+    from app import db
+    from models import User, Transaction, Fine
+
+2. retrieves the first user and first transaction
+
+    user = User.query.first()
+    t = Transaction.query.first()
+
+3. create fine
+
+    fine = Fine(user_id=user.user_id, transaction_id=t.transaction_id, reason="did not return item on time", amount=10.00)
+    db.session.add(fine)
+    db.session.commit()
+    exit()
+
+    note: you can write any reason and amount
+
+to delete fine:
+
+1. open shell
+
+    flask shell
+    from app import db
+    from models import Fine
+
+2. select the first fine from table
+
+    fine = Fine.query.first()
+
+3. delete that fine
+
+    db.session.delete(fine)
+    db.session.commit()
+    exit()
+
