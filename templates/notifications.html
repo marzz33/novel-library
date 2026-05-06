@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name = "viewport" content ="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+
+    <style>
+        body {
+            font-family: 'Neuton', serif;
+            background: #fffefc;
+            color: var(--brown-2);
+            margin: 0;
+            padding: 40px;
+        }
+
+        :root {
+            --green: #96a090;
+            --green-2: #838b7e;
+            --light-green: #c5d862;
+            --cream: #fffddd;
+            --brown: #9a7c69;
+            --pink: #ecb0a1;
+            --gray: #79796f;
+            --dark-cream: #c0bea8;
+            --white: #fffefc;
+            --brown-2: #5f4d43;
+            --border-radius-s: 8px;
+            --border-radius-m: 30px;
+            --border-radius-circle: 50%;
+        }
+
+        /* ---------------- title ! ---------------- */
+        h1 {
+            font-size: 50px;
+            margin-top: 50px;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+            color: var(--green);
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* ---------------- box container ! ---------------- */
+        .container {
+            width: 65%;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius-m);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+        }
+
+        /* ---------------- button for home and profile ! ---------------- */
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            text-decoration: none;
+        }
+
+        .btn i {
+            margin-right: 5px;
+            color: var(--green);
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        .btn:hover i {
+            color: var(--green-2);
+            transition: 0.3s ease;
+        }
+
+        /* ---------------- notification msg ! ---------------- */
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .notif-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: var(--border-radius-s);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: 0.3s ease;
+        }
+
+        .notif-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .notif-card.unread {
+            border-left: 5px solid var(--green);
+            background: #f7faf6;
+        }
+
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            align-items: center;
+            letter-spacing: 1px;
+        }
+
+        .notif-type {
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .alert i {
+            width: 10px;
+            height: 10px;
+            color: red;
+            border-radius: var(--border-radius-circle);
+        }
+
+        .notif-message {
+            margin: 10px 0;
+            font-size: 15px;
+            line-height: 1.4;
+            letter-spacing: 1px;
+        }
+
+        .notif-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+        .notif-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* note: button for mark as read and delete */
+        .small-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 20px;
+            background: var(--green);
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Neuton', serif;
+            letter-spacing: 1px;
+            height: 30px;
+        }
+
+        .small-btn:hover {
+            background: var(--green-2);
+            transition: 0.3s ease;
+        }
+
+        .small-btn.danger {
+            background: var(--pink);
+        }
+
+        .small-btn.danger:hover {
+            background: #d49585;
+            transition: 0.3s ease;
+        }
+
+        /* msg appears if no notifications */
+        .empty {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+        }
+
+        /* ------------------- scroll bar ! ------------------- */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent; /* the color behind the scroll */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--green); 
+            border-radius: 10px; 
+            border: 1px solid #838b7e;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #838b7e;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Notifications</h1>
+
+    {% if notifications %}
+
+        <div class="notif-list">
+
+            {% for n in notifications %}
+            <div class = "notif-card {% if not n.is_read %}unread{% endif %}">
+
+                <!-- header -->
+                <div class = "notif-header">
+                    <span class = "notif-type">{{ n.type.value }}</span>
+
+                    {% if not n.is_read %}
+                        <span class="alert"><i class="fa-solid fa-circle-exclamation"></i></span>
+                    {% endif %}
+                </div>
+
+                <!-- message -->
+                <div class="notif-message">
+                    {{ n.message }}
+                </div>
+
+                <!-- footer: contains date and actions -->
+                <div class="notif-footer">
+
+                    <span>
+                        {{ n.sent_on.strftime('%Y-%m-%d %H:%M') if n.sent_on else '--' }}
+                    </span>
+
+                    <div class="notif-actions">
+
+                        <form method="POST"
+                              action="{{ url_for('mark_notification_as_read', notification_id=n.notification_id) }}">
+                            <button class="small-btn">Mark as Read</button>
+                        </form>
+
+                        <form method="POST"
+                              action="{{ url_for('delete_notification', notification_id=n.notification_id) }}">
+                            <button class="small-btn danger">Delete</button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p class="empty">No notifications.</p>
+
+    {% endif %}
+
+    <!-- bottom buttons to go back to home or profile -->
+    <div style="text-align:center;">
+        <a href="{{ url_for('index') }}" class="btn"><i class="fa-solid fa-house"></i></a>
+        <a href="{{ url_for('profile') }}" class="btn"><i class="fa-solid fa-user"></i></a>
+    </div>
+
+</div>
+
+</body>
+</html>

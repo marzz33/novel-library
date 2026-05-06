@@ -122,6 +122,7 @@
 
         /* profile icon ! ------------------- */
         .profile-icon {
+            position: relative;
             display: inline-block;
             margin-right: 15px;
         }
@@ -279,6 +280,23 @@
             display: block;
         }
 
+        /* note: adds a small indicator to the notification icon */
+        .notification-alert {
+            position: absolute;
+            top: -7px;
+            right: -10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 5px;
+            height: 15px;
+            padding: 1px 7px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 10px;
+            border-radius: var(--border-radius-m);
+        }
+
         </style>
 
     </head>
@@ -323,6 +341,17 @@
                         </a>
                     </div>
                     {% if current_user.is_authenticated %}
+
+                        {% set unread_notifications = current_user.notifications | selectattr('is_read', 'equalto', False) | list %}
+                            <div class = "profile-icon">
+                                <a href = "{{url_for('notifications')}}">
+                                    <i class="fa-solid fa-bell"></i>
+                                    {% if unread_notifications | length > 0 %}
+                                        <span class = "notification-alert"> {{ unread_notifications | length }} </span>
+                                    {% endif %}
+                                </a>
+                            </div>
+
                         <div class = "profile-icon">
                             <a href = "{{url_for('profile')}}">
                                 <i class="fa-solid fa-user"></i>

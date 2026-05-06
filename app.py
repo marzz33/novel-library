@@ -113,8 +113,12 @@ def profile():
         email = request.form.get('email')
         phone = request.form.get('phone')
         current_user.update_profile(name=name, email=email, phone=phone)
+
+        from models.Notifications import notify_account_update
+        notify_account_update(current_user.user_id, "Your account has been updated!")
+
         return redirect(url_for('profile'))
-    return render_template('profile.html', user = current_user)
+    return render_template('profile.html', user = current_user, notifications = current_user.notifications)
 
 # transaction section -------------------
 
@@ -382,6 +386,31 @@ def pay_fine(fine_id):
     except ValueError:
         pass
     return redirect(url_for('fines'))
+
+# notification section -------------------
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    user_notifications = Notification.query.filter_by(user_id=current_user.user_id).order_by(Notification.sent_on.desc()).all()
+    return render_template('notifications.html', user=current_user, notifications=user_notifications)
+
+@app.route('/notifications/<notification_id>/mark-as-read', methods=['POST'])
+@login_required
+def mark_notification_as_read(notification_id):
+    notification = Notification.query.filter_by(notification_id=notification_id).first()
+    if notification and notification.user_id == current_user.user_id:
+        notification.mark_as_read()
+    return redirect(url_for('notifications'))
+
+@app.route('/notifications/<notification_id>/delete', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    notification = Notification.query.filter_by(notification_id=notification_id).first()
+    if notification and notification.user_id == current_user.user_id:
+        db.session.delete(notification)
+        db.session.commit()
+    return redirect(url_for('notifications'))
 
 # -------------------
 
