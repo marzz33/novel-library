@@ -41,7 +41,7 @@
 
     .cart-container {
         display: grid;
-        grid-template-columns: auto auto;
+        grid-template-columns: 2fr 1fr;
         max-width: 1200px;
         margin: 40px auto;
         background: var(--white);
@@ -101,6 +101,7 @@
         text-align: center;
         padding: 40px;
         color: gray;
+        letter-spacing: 1px;
     }
 
     /* ------------------- right section ! ------------------- */
@@ -285,7 +286,7 @@
     {% else %}
 
     <div class="empty-cart">
-        Your cart is empty
+        Your cart is empty!
     </div>
 
     {% endif %}
