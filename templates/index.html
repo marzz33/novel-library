@@ -357,7 +357,7 @@
 
                 <div>
                     {% set cart_count = current_user.cart.item_count() if current_user.cart else 0 %}
-                    <div class = "profile-icon notification-icon">
+                    <div class = "profile-icon">
                         <a href = "{{url_for('view_cart')}}">
                             <i class="fa-solid fa-cart-shopping"></i>
                             {% if cart_count > 0 %}
