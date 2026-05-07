@@ -258,6 +258,27 @@
             70%  { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-20px); }
 }
+
+        /* ------------------- cart item indicator ------------------- */
+        .cart-icon a {
+            position: relative;
+        }
+
+        .cart-alert {
+            position: absolute;
+            top: 2px;
+            left: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 18px;
+            padding: 1px 7px;
+            background: var(--pink);
+            color: #fff;
+            font-size: 10px;
+            border-radius: var(--border-radius-m);
+        }
     </style>
 </head>
 <body>
@@ -304,9 +325,16 @@
                     </a><br>
                 </li>
                 <li>
-                    <a href="{{ url_for('view_cart') }}">
-                        <i class="fa-solid fa-cart-shopping"></i> &nbsp; Cart
-                    </a><br>
+                    {% set cart_count = current_user.cart.item_count() if current_user.cart else 0 %}
+                    <div class = "cart-icon">
+                        <a href="{{ url_for('view_cart') }}">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            {% if cart_count > 0 %}
+                                <span class = "cart-alert"> {{ cart_count }} </span>
+                            {% endif %}
+                            &nbsp; Cart
+                        </a><br>
+                    </div>
                 </li>
             </ul>
         </nav>
