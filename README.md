@@ -73,10 +73,12 @@ Instructions to create/test fines through shell
     from app import db
     from models import User, Transaction, Fine
 
-2. retrieves the first user and first transaction
+2. retrieves a specific user and first transaction
 
-    user = User.query.first()
+    user = User.query.filter_by(email = "email@example.com").first()
     t = Transaction.query.first()
+
+    note: insert your user email in the 'email@example.com'
 
 3. create fine
 
@@ -87,17 +89,20 @@ Instructions to create/test fines through shell
 
     note: you can write any reason and amount
 
-to delete fine:
+To delete fine from specific user:
 
 1. open shell
 
     flask shell
     from app import db
-    from models import Fine
+    from models import User, Fine
 
-2. select the first fine from table
+2. select specific user and fine from table
 
-    fine = Fine.query.first()
+    user = User.query.filter_by(email = "email@example.com").first()
+    fine = Fine.query.filter_by(user_id=user.user_id).first()
+
+    note: insert your user email in the 'email@example.com'
 
 3. delete that fine
 
