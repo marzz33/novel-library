@@ -412,6 +412,51 @@ def delete_notification(notification_id):
         db.session.commit()
     return redirect(url_for('notifications'))
 
+@app.route('/admin/reservations')
+@login_required
+def admin_reservations():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    return render_template('admin-reservations.html')
+
+@app.route('/admin/users/<user_id>/suspend', methods=['POST'])
+@login_required
+def admin_suspend_user(user_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    user = User.query.filter_by(user_id=user_id).first()
+    if not user:
+        abort(404)
+    from models.users import MemberStatus
+    user.status = MemberStatus.SUSPENDED
+    db.session.commit()
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<user_id>/unsuspend', methods=['POST'])
+@login_required
+def admin_unsuspend_user(user_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    user = User.query.filter_by(user_id=user_id).first()
+    if not user:
+        abort(404)
+    from models.users import MemberStatus
+    user.status = MemberStatus.ACTIVE
+    db.session.commit()
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<user_id>/waive-fine/<fine_id>', methods=['POST'])
+@login_required
+def admin_waive_fine(user_id, fine_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    from models.Fine import Fine
+    fine = Fine.query.filter_by(fine_id=fine_id, user_id=user_id).first()
+    if not fine:
+        abort(404)
+    fine.waive()
+    return redirect(url_for('admin_users'))
+
 # -------------------
 
 if __name__ == '__main__':
