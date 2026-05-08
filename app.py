@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from extensions import db, bcrypt 
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin, current_user
 from models import*
+from models.Items import MovieFormat, Condition
 
 app = Flask(__name__)
 
@@ -482,6 +483,41 @@ def admin_waive_fine(user_id, fine_id):
         abort(404)
     fine.waive()
     return redirect(url_for('admin_users'))
+
+@app.route('/admin/items/edit/<item_id>', methods=['POST'])
+@login_required
+def admin_edit_item(item_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    item = Item.query.filter_by(item_id=item_id).first()
+    if not item:
+        abort(404)
+
+    item.title = request.form.get('title')
+    item.qty = int(request.form.get('qty'))
+    item.description = request.form.get('description')
+    item.image_url = request.form.get('image_url')
+
+    if item.item_type == 'Book':
+        item.author = request.form.get('author')
+        item.isbn = request.form.get('isbn')
+        item.publisher = request.form.get('publisher')
+        item.genre = request.form.get('genre')
+        item.edition = request.form.get('edition')
+    elif item.item_type == 'Movie':
+        item.director = request.form.get('director')
+        item.format = MovieFormat(request.form.get('format'))
+        item.rating = request.form.get('rating')
+        release_year = request.form.get('release_year')
+        item.release_year = int(release_year) if release_year else None
+    elif item.item_type == 'Computer':
+        item.brand = request.form.get('brand')
+        item.os = request.form.get('os')
+        item.condition = Condition(request.form.get('condition'))
+        item.specs = request.form.get('specs')
+
+    db.session.commit()
+    return redirect(url_for('admin_items'))
 
 # -------------------
 
