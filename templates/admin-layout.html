@@ -547,8 +547,9 @@
                 </li>
 
                 <li>
-                    <a href="#">
-                        <i class="fa-solid fa-chart-bar"></i> &nbsp; Reports
+                    <a href="{{ url_for('admin_reservations') }}"
+                    class="{{ 'active' if request.endpoint == 'admin_reservations' else '' }}">
+                        <i class="fa-solid fa-calendar-check"></i> &nbsp; Reservations
                     </a><br>
                 </li>
 
