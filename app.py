@@ -412,6 +412,13 @@ def delete_notification(notification_id):
         db.session.commit()
     return redirect(url_for('notifications'))
 
+@app.route('/admin/reservations')
+@login_required
+def admin_reservations():
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    return render_template('admin-reservations.html')
+
 # -------------------
 
 if __name__ == '__main__':
