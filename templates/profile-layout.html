@@ -292,6 +292,66 @@
             border-radius: var(--border-radius-m);
         }
 
+        /* ------------------- table ------------------- */
+        .t-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .t-table thead {
+            background: var(--green);
+            color: white;
+        }
+
+        .t-table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        .t-table tbody tr {
+            border-bottom: 1px solid #f0ede8;
+            transition: background 0.15s ease;
+        }
+
+        .t-table tbody tr:hover {
+            background: #f7f3ee;
+        }
+
+        .t-table tbody td {
+            padding: 12px 16px;
+            color: var(--brown-2);
+            vertical-align: middle;
+        }
+
+        /* ------------------- action buttons ------------------- */
+        .btn-action {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: var(--border-radius-m);
+            font-family: 'Neuton', serif;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-action.danger {
+            background: #e8c4bb;
+            color: #a85e47;
+        }
+
+        .btn-action.danger:hover {
+            background: #c0735a;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
