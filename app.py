@@ -350,10 +350,10 @@ def renew_loan(transaction_id):
 @app.route('/reservations')
 @login_required
 def reservations():
-    # Clean up expired reservations before showing the page
+    if current_user.get_role().value == 'Admin':
+        return redirect(url_for('admin_reservations'))
     from models.Reservation import Reservation
     Reservation.expire_overdue_reservations()
-
     user_reservations = current_user.view_reservations()
     return render_template('reservations.html',
                            user = current_user,
