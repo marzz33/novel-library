@@ -203,7 +203,27 @@ def admin_users():
         ).all()
     else:
         users = User.query.all()
-    return render_template('admin-users.html', users=users)
+    active_loans = {u.user_id: Transaction.query.filter_by(
+        user_id=u.user_id).filter(
+        Transaction.status.in_(['Active', 'Overdue'])).all()
+        for u in users}
+    return render_template('admin-users.html', users=users, active_loans=active_loans)
+
+
+#due date change
+@app.route('/admin/loans/<transaction_id>/due-date', methods=['POST'])
+@login_required
+def admin_change_due_date(transaction_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    transaction = Transaction.query.filter_by(transaction_id=transaction_id).first()
+    if not transaction:
+        abort(404)
+    from datetime import datetime
+    new_due_date = request.form.get('due_date')
+    transaction.due_date = datetime.strptime(new_due_date, '%Y-%m-%d')
+    db.session.commit()
+    return redirect(url_for('admin_users'))
 
 @app.route('/admin/users/<user_id>/promote', methods=['POST'])
 @login_required
