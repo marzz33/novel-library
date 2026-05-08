@@ -122,7 +122,6 @@
 
         /* profile icon ! ------------------- */
         .profile-icon {
-            position: relative;
             display: inline-block;
             margin-right: 15px;
         }
@@ -176,61 +175,8 @@
             background: #96a090;
         }
 
-        /* search bar ! ------------------- */
-        .container {
-            display: inline-block;
-            width: 600px;
-            margin-top: 100px;
-        }
-
-        form {
-            height: 55px;
-            display: flex;
-            border: 2px solid #5f4d43;
-            box-sizing: border-box;
-            background: #fff;
-            border-radius: var(--border-radius-m);
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        form button {
-            background: #96a090;
-            padding: 10px 40px;
-            border: none;
-            outline: none;
-            color: #fff;
-            letter-spacing: 1px;
-            cursor: pointer;
-            font-family: 'Neuton', serif;
-            font-size: 15px;
-        }
-
-        form button:hover {
-            color: white;
-        }
-
-        form input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-family: 'Neuton', serif;
-            font-size: 15px;
-            color: var(--brown);
-        }
-
-        form .fa-search {
-            align-self: center;
-            padding: 10px 20px;
-            color: var(--green);
-        }
-
-        /* welcome img of container ! */
-        .welcome {
-            width: 450px;
-            height: auto;
-            margin-top: -60px;
-            display: inline-block;
+        .title {
+            color: #5f4d43;
         }
 
         /* dropdown menu for browse ! ------------------- */
@@ -284,7 +230,7 @@
             display: block;
         }
 
-        /* note: adds a small indicator to the notification icon */
+                /* note: adds a small indicator to the notification icon */
         .notification-alert {
             position: absolute;
             top: -7px;
@@ -326,8 +272,8 @@
         <header>
             <!--library navigation-->
             <nav class = "navbar">
-
-                <h1>Novel. ☘︎ ݁˖</h1>
+                <!-- can press the title "novel" to go back to homepage -->
+                <h1><a href = "{{url_for('index')}}" class = "title">Novel. ☘︎ ݁˖</a></h1>
 
                 <!--navigation buttons-->
                 <ul class = "nav-menu">
@@ -366,7 +312,6 @@
                         </a>
                     </div>
                     {% if current_user.is_authenticated %}
-
                         {% set unread_notifications = current_user.notifications | selectattr('is_read', 'equalto', False) | list %}
                             <div class = "profile-icon">
                                 <a href = "{{url_for('notifications')}}">
@@ -376,7 +321,6 @@
                                     {% endif %}
                                 </a>
                             </div>
-
                         <div class = "profile-icon">
                             <a href = "{{url_for('profile')}}">
                                 <i class="fa-solid fa-user"></i>
@@ -397,24 +341,13 @@
 
             </nav>
         </header>
-        
-        <!-- welcome pic with search bar -->
-        <div class = "container">
-            <div class = "welcome">
-                <img src= "https://pbs.twimg.com/media/HEIhL-DaIAAz4Ax?format=jpg&name=large">
-            </div>
-                    <form method="GET" action="{{ url_for('search') }}">
-                        <i class = "fas fa-search"></i>
-                        <input 
-                            type = "text"
-                            name="q"
-                            placeholder = "What are you looking for?">
-                        <button type = "submit">Search</button>
-                    </form>
-                </div>
+
+        <p>Novel Library is a basic Library Management system made for users to loan their favorite books and movies. 
+            We are a group of people motivated by the vision of reading becoming a more accessible and widespread hobby in 
+            the present day. Aside from this, we have also made computers and movies available for loaning to expand our scope 
+            and make these kinds of items also available for a public that might not have access to these in any other way. 
+            Currently, Novel Library has over 50 items available for rental, and will continue to work on increasing this number.</p>
         
     </body>
-
-    </html>
 
     </html>

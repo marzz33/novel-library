@@ -1,0 +1,49 @@
+{% extends "profile-layout.html" %}
+
+{% block title %}My Transactions{% endblock %}
+
+{% block content %}
+<h2 class="title">My Transactions</h2>
+<br>
+
+{% if transactions %}
+    <table class = "t-table">
+        <thead>
+            <tr>
+                <th>Title</th>          <!-- title of the item-->
+                <th>Item Type</th>      <!-- item type -->
+                <th>Type</th>           <!-- shows if loaned, reserved, or returned -->
+                <th>Date</th>           <!-- date of the transaction made -->
+                <th>Due Date</th>       <!-- due date of item -->
+                <th>Returned Date</th>  <!-- date of when item got returned -->
+                <th>Status</th>         <!-- shows if active, completed, overdue --> 
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t.item.title if t.item else 'N/A' }}</td>
+
+                <td>{{ t.item.item_type if t.item else 'N/A' }}</td>
+
+                <td>{{ t.transaction_type.value }}</td>
+
+                <td>{{ t.date.strftime('%Y-%m-%d') if t.date else '--' }}</td>
+
+                <td>{{ t.due_date.strftime('%Y-%m-%d') if t.due_date else '--' }}</td>
+
+                <td>{{ t.returned_date.strftime('%Y-%m-%d') if t.returned_date else '--' }}</td>
+
+                <td>{{ t.status.value }}</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+<p>No transactions found.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+{% endblock %}

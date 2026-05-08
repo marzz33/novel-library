@@ -1,0 +1,51 @@
+{% extends "profile-layout.html" %}
+
+{% block title %}My Loans{% endblock %}
+
+{% block content %}
+<h2 class="title">My Loans</h2>
+<br>
+
+{% if loans %}
+<table class="t-table">
+    <thead>
+        <tr>
+            <th>Title</th>      <!-- title of the item -->
+            <th>Item Type</th>  <!-- item type -->
+            <th>Date</th>       <!-- date of the loan -->
+            <th>Due Date</th>   <!-- due date of the loan -->
+            <th>Status</th>     <!-- shows status of the loan thats active, overdue, returned -->
+            <th>Actions</th>    <!-- buttons for returning and renewing the loan -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for loan in loans %}
+        <tr>
+            <td>{{ loan.item.title if loan.item else 'N/A' }}</td>
+            <td>{{ loan.item.item_type if loan.item else 'N/A' }}</td>
+            <td>{{ loan.date.strftime('%Y-%m-%d') if loan.date else '--' }}</td>
+            <td>{{ loan.due_date.strftime('%Y-%m-%d') if loan.due_date else '--' }}</td>
+            <td>{{ loan.status.value }}</td>
+            <td>
+                {# Return button — always shown for active/overdue loans #}
+                <form method="POST" action="{{ url_for('return_loan', transaction_id=loan.transaction_id) }}" style="display:inline;">
+                    <button type="submit" class="btn-action">Return</button>
+                </form>
+
+                {# Renew button — only when item supports it AND user hasn't used their renewal #}
+                {% if loan.item and loan.item.is_renewable() and loan.renewed_count < loan.max_renewals %}
+                    <form method="POST" action="{{ url_for('renew_loan', transaction_id=loan.transaction_id) }}" style="display:inline;">
+                        <button type="submit" class="btn-action">Renew</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>You don't have any active loans.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+{% endblock %}

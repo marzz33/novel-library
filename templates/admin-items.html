@@ -1,0 +1,467 @@
+<!-- todo: add edit functionality, fix crash when adding multiple items -->
+
+{% extends "admin-layout.html" %}
+
+{% block title %}Manage Items{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2 class="page-title">Items</h2>
+    <div style="display:flex; gap:10px;">
+    <button class="action-btn edit" onclick="document.getElementById('addBookModal').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> &nbsp; Add Book
+    </button>
+    <button class="action-btn edit" onclick="document.getElementById('addMovieModal').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> &nbsp; Add Movie
+    </button>
+    <button class="action-btn edit" onclick="document.getElementById('addComputerModal').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> &nbsp; Add Computer
+    </button>
+</div>
+</div>
+
+<!------ Search bar -->
+<form method="GET" action="{{ url_for('admin_items') }}">
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input
+            type="text"
+            name="q"
+            placeholder="Search by title, author, ISBN..."
+            value="{{ request.args.get('q', '') }}">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+<!----- items cards ------>
+<div class="card">
+    {% if items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Author / Director</th>
+                <th>Copies</th>
+                <th>Available</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.item_type }}</td>
+                <td>
+                    {% if item.author is defined %}
+                        {{ item.author }}
+                    {% elif item.director is defined %}
+                        {{ item.director }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.available_qty }}</td>
+                <td>
+                    {% if item.available_qty > 0 %}
+                        <span class="badge available">Available</span>
+                    {% elif item.available_qty == 0 %}
+                        <span class="badge loaned">Fully Loaned</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="action-btn edit" onclick="openEditModal(
+                        '{{ item.item_id }}',
+                        '{{ item.item_type }}',
+                        '{{ item.title }}',
+                        {{ item.qty }},
+                        {{ item.available_qty }},
+                        '{{ item.description or '' }}',
+                        '{{ item.image_url or '' }}',
+                        '{{ item.author if item.item_type == 'Book' else '' }}',
+                        '{{ item.isbn if item.item_type == 'Book' else '' }}',
+                        '{{ item.publisher if item.item_type == 'Book' else '' }}',
+                        '{{ item.genre if item.item_type == 'Book' else '' }}',
+                        '{{ item.edition if item.item_type == 'Book' else '' }}',
+                        '{{ item.director if item.item_type == 'Movie' else '' }}',
+                        '{{ item.format.value if item.item_type == 'Movie' else '' }}',
+                        '{{ item.rating if item.item_type == 'Movie' else '' }}',
+                        '{{ item.release_year if item.item_type == 'Movie' else '' }}',
+                        '{{ item.brand if item.item_type == 'Computer' else '' }}',
+                        '{{ item.os if item.item_type == 'Computer' else '' }}',
+                        '{{ item.condition.value if item.item_type == 'Computer' else '' }}',
+                        '{{ item.specs if item.item_type == 'Computer' else '' }}'
+                    )">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+
+                    <form method="POST" action="{{ url_for('admin_remove_item', item_id=item.item_id) }}" style="display:inline;">
+                        <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure you want to remove this item?')">
+                            <i class="fa-solid fa-trash"></i> Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fa-solid fa-box-open"></i>
+        No items found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Book Modal -->
+<div id="addBookModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:500px; max-height:80vh; overflow-y:auto; position:relative;">
+        
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">Add Book</h2>
+
+        <form method="POST" action="{{ url_for('admin_add_book') }}">
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Title *</label>
+                <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Author *</label>
+                <input type="text" name="author" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Quantity *</label>
+                <input type="number" name="qty" min="1" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">ISBN</label>
+                <input type="text" name="isbn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Publisher</label>
+                <input type="text" name="publisher" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Genre</label>
+                <input type="text" name="genre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Edition</label>
+                <input type="text" name="edition" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Description</label>
+                <textarea name="description" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Cover Image URL</label>
+                <input type="text" name="image_url" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="action-btn edit" style="flex:1; padding:10px;">Add Book</button>
+                <button type="button" class="action-btn delete" style="flex:1; padding:10px;" onclick="document.getElementById('addBookModal').style.display='none'">Cancel</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Add Movie Modal -->
+<div id="addMovieModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:500px; max-height:80vh; overflow-y:auto; position:relative;">
+        
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">Add Movie</h2>
+
+        <form method="POST" action="{{ url_for('admin_add_movie') }}">
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Title *</label>
+                <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Director *</label>
+                <input type="text" name="director" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Format *</label>
+                <select name="format" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                    <option value="VHS">VHS</option>
+                    <option value="DVD">DVD</option>
+                    <option value="Blu-ray">Blu-ray</option>
+                    <option value="4K UHD">4K UHD</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Genre</label>
+                <input type="text" name="genre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Rating</label>
+                <input type="text" name="rating" placeholder="e.g. PG, PG-13, R" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Release Year</label>
+                <input type="number" name="release_year" placeholder="e.g. 2023" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Quantity *</label>
+                <input type="number" name="qty" min="1" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Description</label>
+                <textarea name="description" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Cover Image URL</label>
+                <input type="text" name="image_url" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="action-btn edit" style="flex:1; padding:10px;">Add Movie</button>
+                <button type="button" class="action-btn delete" style="flex:1; padding:10px;" onclick="document.getElementById('addMovieModal').style.display='none'">Cancel</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Add Computer Modal -->
+<div id="addComputerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:500px; max-height:80vh; overflow-y:auto; position:relative;">
+        
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">Add Computer</h2>
+
+        <form method="POST" action="{{ url_for('admin_add_computer') }}">
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Title *</label>
+                <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Serial Number *</label>
+                <input type="text" name="serial_number" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Operating System *</label>
+                <input type="text" name="os" required placeholder="e.g. Windows 11, macOS" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Condition *</label>
+                <select name="condition" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Brand</label>
+                <input type="text" name="brand" placeholder="e.g. Apple, Dell, HP" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Specs</label>
+                <textarea name="specs" rows="3" placeholder="e.g. 16GB RAM, 512GB SSD, Intel i7" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Quantity *</label>
+                <input type="number" name="qty" min="1" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Cover Image URL</label>
+                <input type="text" name="image_url" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="action-btn edit" style="flex:1; padding:10px;">Add Computer</button>
+                <button type="button" class="action-btn delete" style="flex:1; padding:10px;" onclick="document.getElementById('addComputerModal').style.display='none'">Cancel</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div id="editItemModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:500px; max-height:80vh; overflow-y:auto; position:relative;">
+
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">Edit Item</h2>
+
+        <form method="POST" id="editItemForm">
+
+            <!-- shared fields -->
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Title *</label>
+                <input type="text" name="title" id="edit-title" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Quantity *</label>
+                <input type="number" name="qty" id="edit-qty" min="1" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Description</label>
+                <textarea name="description" id="edit-description" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Cover Image URL</label>
+                <input type="text" name="image_url" id="edit-image-url" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+            </div>
+
+            <!-- book fields -->
+            <div id="book-fields" style="display:none;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Author *</label>
+                    <input type="text" name="author" id="edit-author" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">ISBN</label>
+                    <input type="text" name="isbn" id="edit-isbn" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Publisher</label>
+                    <input type="text" name="publisher" id="edit-publisher" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Genre</label>
+                    <input type="text" name="genre" id="edit-genre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Edition</label>
+                    <input type="text" name="edition" id="edit-edition" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+            </div>
+
+            <!-- movie fields -->
+            <div id="movie-fields" style="display:none;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Director *</label>
+                    <input type="text" name="director" id="edit-director" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Format *</label>
+                    <select name="format" id="edit-format" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                        <option value="VHS">VHS</option>
+                        <option value="DVD">DVD</option>
+                        <option value="Blu-ray">Blu-ray</option>
+                        <option value="4K UHD">4K UHD</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Rating</label>
+                    <input type="text" name="rating" id="edit-rating" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Release Year</label>
+                    <input type="number" name="release_year" id="edit-release-year" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+            </div>
+
+            <!-- computer fields -->
+            <div id="computer-fields" style="display:none;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Brand</label>
+                    <input type="text" name="brand" id="edit-brand" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Operating System *</label>
+                    <input type="text" name="os" id="edit-os" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Condition *</label>
+                    <select name="condition" id="edit-condition" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;">
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; color:var(--brown); letter-spacing:1px;">Specs</label>
+                    <textarea name="specs" id="edit-specs" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; font-family:'Neuton',serif; font-size:15px;"></textarea>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="action-btn edit" style="flex:1; padding:10px;">Save Changes</button>
+                <button type="button" class="action-btn delete" style="flex:1; padding:10px;"
+                        onclick="document.getElementById('editItemModal').style.display='none'">Cancel</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditModal(itemId, itemType, title, qty, availableQty, description, imageUrl,
+                       author, isbn, publisher, genre, edition,
+                       director, format, rating, releaseYear,
+                       brand, os, condition, specs) {
+
+    // set form action
+    document.getElementById('editItemForm').action = `/admin/items/edit/${itemId}`;
+
+    // fill shared fields
+    document.getElementById('edit-title').value = title;
+    document.getElementById('edit-qty').value = qty;
+    document.getElementById('edit-description').value = description;
+    document.getElementById('edit-image-url').value = imageUrl;
+
+    // hide all type-specific fields first
+    document.getElementById('book-fields').style.display = 'none';
+    document.getElementById('movie-fields').style.display = 'none';
+    document.getElementById('computer-fields').style.display = 'none';
+
+    // show and fill relevant fields
+    if (itemType === 'Book') {
+        document.getElementById('book-fields').style.display = 'block';
+        document.getElementById('edit-author').value = author;
+        document.getElementById('edit-isbn').value = isbn;
+        document.getElementById('edit-publisher').value = publisher;
+        document.getElementById('edit-genre').value = genre;
+        document.getElementById('edit-edition').value = edition;
+    } else if (itemType === 'Movie') {
+        document.getElementById('movie-fields').style.display = 'block';
+        document.getElementById('edit-director').value = director;
+        document.getElementById('edit-format').value = format;
+        document.getElementById('edit-rating').value = rating;
+        document.getElementById('edit-release-year').value = releaseYear;
+    } else if (itemType === 'Computer') {
+        document.getElementById('computer-fields').style.display = 'block';
+        document.getElementById('edit-brand').value = brand;
+        document.getElementById('edit-os').value = os;
+        document.getElementById('edit-condition').value = condition;
+        document.getElementById('edit-specs').value = specs;
+    }
+
+    document.getElementById('editItemModal').style.display = 'flex';
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "admin-layout.html" %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2 class="page-title">Users</h2>
+</div>
+
+<!-- Search bar-->
+<form method="GET" action="{{ url_for('admin_users') }}">
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Search by name or email..."
+               value="{{ request.args.get('q', '') }}">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+<!-- Users -->
+<div class="card">
+    {% if users %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Fines</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role.value }}</td>
+                <td>
+                    {% if user.status and user.status.value == 'Suspended' %}
+                        <span class="badge suspended">Suspended</span>
+                    {% else %}
+                        <span class="badge active">Active</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.fines %}
+                        {% set unpaid = user.fines | selectattr('status.value', 'equalto', 'Unpaid') | list %}
+                        {% if unpaid %}
+                            <span style="color: var(--admin-accent);">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                {{ unpaid | length }} unpaid
+                            </span>
+                        {% else %}
+                            <span style="color: #3a6b34;">
+                                <i class="fa-solid fa-check"></i> Clear
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #3a6b34;">
+                            <i class="fa-solid fa-check"></i> Clear
+                        {% endif %}
+                    </span>
+                </td>
+                <td>
+                    <!-- Edit butto-->
+                    <button class="action-btn edit"
+                            onclick="openEditModal(
+                                '{{ user.user_id }}',
+                                '{{ user.name }}',
+                                '{{ user.email }}',
+                                '{{ user.status.value if user.status else 'Active' }}',
+                                {{ user.fines | selectattr('status.value', 'equalto', 'Unpaid') | list | length if user.fines else 0 }},
+                                '{{ user.fines | selectattr('status.value', 'equalto', 'Unpaid') | map(attribute='fine_id') | first if user.fines and (user.fines | selectattr('status.value', 'equalto', 'Unpaid') | list) else '' }}'
+                            )">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fa-solid fa-users-slash"></i>
+        No users found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit User-->
+<div id="editUserModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--white); border-radius:var(--border-radius-s); padding:40px; width:480px; position:relative;">
+
+        <h2 style="color:var(--admin-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:25px;">
+            Manage User
+        </h2>
+
+        <p style="margin-bottom:5px; color:var(--gray); font-size:15px;">
+            <strong id="modal-name"></strong>
+        </p>
+        <p style="margin-bottom:25px; color:var(--gray); font-size:14px;" id="modal-email"></p>
+
+        <!-- Fine warning -->
+        <div id="fine-warning" style="display:none; background:#f5ddd8; border-radius:var(--border-radius-s); padding:12px 16px; margin-bottom:20px; color:var(--admin-accent-dark);">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="fine-warning-text"></span>
+            <form method="POST" id="waive-fine-form" style="display:inline;">
+                <button type="submit" class="action-btn delete" style="margin-left:10px; padding:4px 12px; font-size:13px;">
+                    Waive Fine
+                </button>
+            </form>
+        </div>
+
+        <!-- Suspend / Unsuspend -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <form method="POST" id="suspend-form" style="flex:1;">
+                <button type="submit" class="action-btn delete" style="width:100%; padding:10px;">
+                    <i class="fa-solid fa-ban"></i> Suspend
+                </button>
+            </form>
+            <form method="POST" id="unsuspend-form" style="flex:1;">
+                <button type="submit" class="action-btn edit" style="width:100%; padding:10px;">
+                    <i class="fa-solid fa-circle-check"></i> Unsuspend
+                </button>
+            </form>
+        </div>
+
+        <!-- Promote -->
+        <form method="POST" id="promote-form" style="margin-bottom:15px;">
+            <button type="submit" class="action-btn edit" style="width:100%; padding:10px; background:var(--brown);">
+                <i class="fa-solid fa-arrow-up"></i> Promote to Admin
+            </button>
+        </form>
+
+        <!-- Close -->
+        <button class="action-btn delete" style="width:100%; padding:10px;"
+                onclick="document.getElementById('editUserModal').style.display='none'">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<script>
+function openEditModal(userId, name, email, status, unpaidCount, fineId) {
+    document.getElementById('modal-name').textContent = name;
+    document.getElementById('modal-email').textContent = email;
+
+    // form actions
+    document.getElementById('suspend-form').action = `/admin/users/${userId}/suspend`;
+    document.getElementById('unsuspend-form').action = `/admin/users/${userId}/unsuspend`;
+    document.getElementById('promote-form').action = `/admin/users/${userId}/promote`;
+
+    // warning for fine
+    const fineWarning = document.getElementById('fine-warning');
+    if (unpaidCount > 0) {
+        fineWarning.style.display = 'block';
+        document.getElementById('fine-warning-text').textContent = `This user has ${unpaidCount} unpaid fine(s).`;
+        document.getElementById('waive-fine-form').action = `/admin/users/${userId}/waive-fine/${fineId}`;
+    } else {
+        fineWarning.style.display = 'none';
+    }
+
+    document.getElementById('editUserModal').style.display = 'flex';
+}
+</script>
+
+{% endblock %}

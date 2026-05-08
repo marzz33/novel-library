@@ -1,0 +1,58 @@
+{% extends "profile-layout.html" %}
+
+{% block title %}My Fines{% endblock %}
+
+{% block content %}
+<h2 class="title">My Fines</h2>
+<br>
+
+{% if fines %}
+    <table class = "t-table">
+        <thead>
+            <tr>
+                <th>Title</th>            <!-- item title -->
+                <th>Item Type</th>        <!-- item type -->
+                <th>Amount</th>           <!-- fine amount -->
+                <th>Issued On</th>        <!-- issue date -->
+                <th>Resolved On</th>      <!-- resolution date -->
+                <th>Reason</th>           <!-- fine reason -->
+                <th>Status</th>           <!-- status: Unpaid, Paid, Waived -->
+                <th>Actions</th>          <!-- users can pay off the fine -->
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for f in fines %}
+            <tr>
+                <td>{{ f.transaction.item.title if f.transaction.item else 'N/A' }}</td>
+
+                <td>{{ f.transaction.item.item_type if f.transaction.item else 'N/A' }}</td>
+
+                <td>{{ "%.2f"|format(f.amount) }}</td>
+
+                <td>{{ f.issued_on.strftime('%Y-%m-%d') if f.issued_on else '--' }}</td>
+
+                <td>{{ f.resolved_on.strftime('%Y-%m-%d') if f.resolved_on else '--' }}</td>
+
+                <!-- will try to display a pop up window to display reason instead of showing it directly -->
+                <td>{{ f.reason if f.reason else 'N/A' }}</td>
+
+                <td>{{ f.status.value }}</td>
+
+                <td>
+                    {% if f.status.value == 'Unpaid' %}
+                        <form method = "post" action="{{ url_for('pay_fine', fine_id=f.fine_id) }}">
+                            <button type = "submit" class="pay-btn">Pay</button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+<p>No fines found.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+{% endblock %}

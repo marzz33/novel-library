@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    body {
+        color: var(--brown-2);
+        font-family: 'Neuton', serif;
+        background-color: var(--white);
+    }
+
+    :root {
+            --green: #96a090;
+            --light-green: #c5d862;
+            --cream: #fffddd;
+            --brown: #9a7c69;
+            --pink: #ecb0a1;
+            --gray: #79796f;
+            --dark-cream: #c0bea8;
+            --white: #fffefc;
+            --light-pink: #fbe9e9;
+            --brown-2: #5f4d43;
+            --green-2: #838b7e;
+            --border-radius-s: 8px;
+            --border-radius-m: 30px;
+            --border-radius-circle: 50%;
+        }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .cart-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        max-width: 1200px;
+        margin: 40px auto;
+        background: var(--white);
+        box-shadow: 0.5rem 0 1rem rgba(0,0,0,.1);
+    }
+
+    /* ------------------- left section ! ------------------- */
+    .cart-items {
+        margin-top: 30px;
+        flex: 2;
+        padding: 30px;
+        letter-spacing: 0.5px;
+    }
+
+    .item-img {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .item-img img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+    }
+
+    /* back to home button */
+    .btn {
+        padding: 8px 15px;
+        background: var(--brown);
+        color: var(--white);
+        border: none;
+        border-radius: var(--border-radius-m);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn:hover {
+        background: var(--pink);
+        transition: 0.3s ease;
+    }
+
+    .btn-remove {
+        padding: 8px 12px;
+        color: var(--brown);
+        background: transparent;
+        border: none;
+    }
+
+    .btn-remove:hover {
+        color: var(--pink);
+        transition: 0.3s ease;
+    }
+
+    /* text appears if cart is empty */
+    .empty-cart {
+        text-align: center;
+        padding: 40px;
+        color: gray;
+        letter-spacing: 1px;
+    }
+
+    /* ------------------- right section ! ------------------- */
+    .cart-summary {
+        flex: 1;
+        background: #fbe9e9;
+        padding: 30px;
+    }
+
+    .line {
+        height: 5px;
+        background: var(--brown);
+        width: 14rem;
+        margin-bottom: 50px;
+        margin-top: 30px;
+        place-self: center;
+    }
+
+    /* text for cart summary */
+    .description {
+        margin: 25px auto;
+        font-size: 18px;
+        letter-spacing: 0.5px;
+        place-items: center;
+        text-transform: uppercase;
+        padding: 30px;
+        color: var(--brown);
+    }
+
+    .checkout-btn {
+        place-items: center;
+        text-transform: uppercase;
+        border: none;
+        border-radius: var(--border-radius-m);
+        text-decoration: none;
+        display: inline-block;
+        padding: 12px 60px;
+        background: var(--brown);
+        color: white;
+        letter-spacing: 1.5px;
+    }
+
+    .checkout-btn:hover {
+        background-color: var(--pink);
+        transition: 0.3s ease;
+    }
+
+    .clear-cart-btn {
+        place-items: center;
+        text-transform: uppercase;
+        border: none;
+        border-radius: var(--border-radius-m);
+        text-decoration: none;
+        display: inline-block;
+        padding: 12px 60px;
+        background: #c96b6b;
+        color: white;
+        letter-spacing: 1.5px;
+    }
+
+    .clear-cart-btn:hover {
+        background-color: #b65f5f;
+        transition: 0.3s ease;
+    }
+
+    .checkout-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .store-icon {
+        color: var(--white);
+        opacity: 70%;
+        margin-top: 40%;
+        margin-bottom: 10px;
+        font-size: 10rem;
+        text-align: center;
+    }
+
+    /* ------------------- item table section ! ------------------- */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th {
+        background: var(--light-pink);
+        color: var(--brown-2);
+    }
+
+    /* ------------------- scroll bar ! ------------------- */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent; /* the color behind the scroll */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--green); 
+            border-radius: 10px; 
+            border: 1px solid #838b7e;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #838b7e;
+        }
+</style>
+</head>
+
+<body>
+
+<div class="cart-container">
+
+  <!-- left side -->
+  <div class="cart-items">
+
+    {% if items %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>By</th>
+                <th>Type</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for cart_item in items %}
+            <tr>
+                <td>
+                    <div class = "item-img">
+                        <!-- <img src = "{{cart_item.item.image_url if cart_item.item and cart_item.item.image_url 
+                                      else 'https://via.placeholder.com/50'}}"> -->
+                        <div>
+                            {{ cart_item.item.title if cart_item.item and cart_item.item.title else "N/A" }}
+                        </div>
+                    </div>
+                </td>
+
+                <td>
+                    {% if cart_item.item.item_type == 'Book' %}
+                        {{ cart_item.item.author }}
+                    {% elif cart_item.item.item_type == 'Movie' %}
+                        {{ cart_item.item.director }}
+                    {% elif cart_item.item.item_type == 'Computer' %}
+                        {{ cart_item.item.brand }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ cart_item.item.item_type}}
+                </td>
+
+                <td>
+                    <form method="POST" action="{{ url_for('remove_from_cart', cart_item_id=cart_item.cart_item_id) }}">
+                        <button type="submit" class="btn-remove">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+
+    {% else %}
+
+    <div class="empty-cart">
+        Your cart is empty!
+    </div>
+
+    {% endif %}
+
+    <br><br>
+
+    <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+
+  </div>
+
+  <!-- right side -->
+  <div class="cart-summary">
+    <div class="line"></div>
+
+    <div class = "description">
+        <h3>Cart Summary</h3>
+        <p><strong>Total Items:</strong> {{ total }}</p>
+    </div>
+
+        <div class = "checkout-wrapper">
+            <form method="POST" action="{{ url_for('checkout_cart') }}">
+                <button type="submit" class="checkout-btn">
+                Checkout &nbsp; <i class="fa-solid fa-bag-shopping"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class = "checkout-wrapper">
+            <form method = "POST" action = "{{ url_for('clear_cart') }}">
+                <button type="submit" class="clear-cart-btn">
+                Clear Cart <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class = "store-icon">
+            <i class="fa-solid fa-gift"></i>
+        </div>
+  </div>
+
+</div>
+
+</body>
+</html>

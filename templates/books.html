@@ -1,10 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>browse books!</title>
-    </head>
-    <body>
-        <h1>mmm...books</h1>
-    </body>
-    </html>
+{% extends "browse-layout.html" %}
+
+{% block title %}Books{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">Books</h2>
+
+<form method="GET" action="{{ url_for('books') }}">
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Search by title or author..."
+               value="{{ request.args.get('q', '') }}">
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+{% if books %}
+<div class="card-grid">
+    {% for book in books %}
+    <div class="book-card">
+        <img src="{{ book.image_url if book.image_url else 'https://placehold.co/180x240?text=No+Cover' }}"
+             alt="{{ book.title }}">
+        <div class="card-info">
+            <div class="card-title">{{ book.title }}</div>
+            <div class="card-author">{{ book.author }}</div>
+            {% if book.available_qty > 0 %}
+                <span class="card-badge available">Available ({{ book.available_qty }} of {{ book.qty }})</span>
+            {% else %}
+                <span class="card-badge loaned">Currently Loaned (0 of {{ book.qty }})</span>
+            {% endif %}
+            <form method="POST" action="{{ url_for('add_to_cart', item_id=book.item_id) }}" style="margin-top:8px;">
+                <button type="submit" style="width:100%; padding:6px; background:var(--green); color:white; border:none; border-radius:var(--border-radius-m); font-family:'Neuton',serif; font-size:13px; cursor:pointer;">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fa-solid fa-book-open"></i>
+    No books found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.
+</div>
+{% endif %}
+
+{% endblock %}
