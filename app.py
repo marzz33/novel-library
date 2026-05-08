@@ -412,12 +412,38 @@ def delete_notification(notification_id):
         db.session.commit()
     return redirect(url_for('notifications'))
 
+# admin reservations
+
 @app.route('/admin/reservations')
 @login_required
 def admin_reservations():
     if current_user.get_role().value != 'Admin':
         abort(403)
-    return render_template('admin-reservations.html')
+    reservations = Reservation.query.filter(
+        Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.READY])
+    ).order_by(Reservation.reserved_on.asc()).all()
+    return render_template('admin-reservations.html', reservations=reservations)
+
+@app.route('/admin/reservations/<reservation_id>/approve', methods=['POST'])
+@login_required
+def admin_approve_reservation(reservation_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    try:
+        current_user.approve_reservation(reservation_id)
+    except ValueError:
+        pass
+    return redirect(url_for('admin_reservations'))
+
+@app.route('/admin/reservations/<reservation_id>/cancel', methods=['POST'])
+@login_required
+def admin_cancel_reservation(reservation_id):
+    if current_user.get_role().value != 'Admin':
+        abort(403)
+    reservation = Reservation.query.filter_by(reservation_id=reservation_id).first()
+    if reservation:
+        reservation.cancel()
+    return redirect(url_for('admin_reservations'))
 
 @app.route('/admin/users/<user_id>/suspend', methods=['POST'])
 @login_required
